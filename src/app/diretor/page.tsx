@@ -11,7 +11,9 @@ import {
     BriefcaseBusiness,
     FileText,
 } from "lucide-react";
+import router from "next/router";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface Campanha {
     id: number;
@@ -67,6 +69,7 @@ export default function Page() {
     const [tipoMensagem, setTipoMensagem] = useState<"success" | "danger" | "">("");
     const [paginaUsuarios, setPaginaUsuarios] = useState(1);
     const [paginaCampanhas, setPaginaCampanhas] = useState(1);
+    const router = useRouter();
 
     const registrosPorPaginaUsuarios = 5;
     const registrosPorPaginaCampanhas = 4;
@@ -378,9 +381,9 @@ export default function Page() {
                                 <h2 className="mt-2 text-2xl font-bold text-slate-800">
                                     {faturamentoDia
                                         ? faturamentoDia.toLocaleString("pt-BR", {
-                                              style: "currency",
-                                              currency: "BRL",
-                                          })
+                                            style: "currency",
+                                            currency: "BRL",
+                                        })
                                         : "R$ 0,00"}
                                 </h2>
                             </div>
@@ -465,12 +468,22 @@ export default function Page() {
                             </div>
                         </div>
 
-                        <p className="text-sm text-slate-500 lg:text-right">
-                            Atualizado em{" "}
-                            <strong className="text-slate-700">
-                                {atualizadoEm}
-                            </strong>
-                        </p>
+                        <div className="flex flex-col items-end text-sm text-slate-500">
+                            <button
+                                onClick={() => router.push("/diretor/passageiros_motoristas")}
+                                className="flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-[#00a99d] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00958b]"
+                            >
+                                <Eye size={16} />
+                                Ver Todos
+                            </button>
+
+                            <p className="mt-2">
+                                Atualizado em{" "}
+                                <strong className="text-slate-700">
+                                    {atualizadoEm}
+                                </strong>
+                            </p>
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -554,11 +567,10 @@ export default function Page() {
 
                                             <td className="px-6 py-4 text-center">
                                                 <span
-                                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                                        usuario.user_type === "driver"
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : "bg-emerald-100 text-emerald-700"
-                                                    }`}
+                                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${usuario.user_type === "driver"
+                                                        ? "bg-blue-100 text-blue-700"
+                                                        : "bg-emerald-100 text-emerald-700"
+                                                        }`}
                                                 >
                                                     {usuario.user_type === "driver"
                                                         ? "Motorista"
@@ -612,11 +624,10 @@ export default function Page() {
                                         onClick={() =>
                                             setPaginaUsuarios(i + 1)
                                         }
-                                        className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold ${
-                                            paginaUsuarios === i + 1
-                                                ? "bg-emerald-600 text-white"
-                                                : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                        }`}
+                                        className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold ${paginaUsuarios === i + 1
+                                            ? "bg-emerald-600 text-white"
+                                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                            }`}
                                     >
                                         {i + 1}
                                     </button>
@@ -742,52 +753,50 @@ export default function Page() {
 
                                                 <td className="px-4 py-4 text-center">
                                                     <span
-                                                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                                            candidato.etapa ===
+                                                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${candidato.etapa ===
                                                             "aprovado"
-                                                                ? "bg-emerald-100 text-emerald-700"
+                                                            ? "bg-emerald-100 text-emerald-700"
+                                                            : candidato.etapa ===
+                                                                "reprovado"
+                                                                ? "bg-red-100 text-red-700"
                                                                 : candidato.etapa ===
-                                                                    "reprovado"
-                                                                  ? "bg-red-100 text-red-700"
-                                                                  : candidato.etapa ===
-                                                                      "entrevista"
+                                                                    "entrevista"
                                                                     ? "bg-purple-100 text-purple-700"
                                                                     : candidato.etapa ===
                                                                         "triagem"
-                                                                      ? "bg-yellow-100 text-yellow-700"
-                                                                      : "bg-blue-100 text-blue-700"
-                                                        }`}
+                                                                        ? "bg-yellow-100 text-yellow-700"
+                                                                        : "bg-blue-100 text-blue-700"
+                                                            }`}
                                                     >
                                                         {candidato.etapa
                                                             ? candidato.etapa
-                                                                  .charAt(0)
-                                                                  .toUpperCase() +
-                                                              candidato.etapa.slice(
-                                                                  1
-                                                              )
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                            candidato.etapa.slice(
+                                                                1
+                                                            )
                                                             : "—"}
                                                     </span>
                                                 </td>
 
                                                 <td className="px-4 py-4 text-center">
                                                     <span
-                                                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                                            candidato.status ===
+                                                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${candidato.status ===
                                                             "active"
-                                                                ? "bg-emerald-100 text-emerald-700"
-                                                                : candidato.status ===
-                                                                    "blocked"
-                                                                  ? "bg-red-100 text-red-700"
-                                                                  : "bg-yellow-100 text-yellow-700"
-                                                        }`}
+                                                            ? "bg-emerald-100 text-emerald-700"
+                                                            : candidato.status ===
+                                                                "blocked"
+                                                                ? "bg-red-100 text-red-700"
+                                                                : "bg-yellow-100 text-yellow-700"
+                                                            }`}
                                                     >
                                                         {candidato.status ===
-                                                        "active"
+                                                            "active"
                                                             ? "Ativo"
                                                             : candidato.status ===
                                                                 "blocked"
-                                                              ? "Bloqueado"
-                                                              : "Inativo"}
+                                                                ? "Bloqueado"
+                                                                : "Inativo"}
                                                     </span>
                                                 </td>
 
@@ -847,11 +856,10 @@ export default function Page() {
 
                         {mensagem && (
                             <div
-                                className={`mx-5 mt-5 rounded-lg border px-4 py-3 text-sm font-medium ${
-                                    tipoMensagem === "success"
-                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                        : "border-red-200 bg-red-50 text-red-700"
-                                }`}
+                                className={`mx-5 mt-5 rounded-lg border px-4 py-3 text-sm font-medium ${tipoMensagem === "success"
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    : "border-red-200 bg-red-50 text-red-700"
+                                    }`}
                             >
                                 {mensagem}
                             </div>
@@ -992,11 +1000,10 @@ export default function Page() {
                                             onClick={() =>
                                                 setPaginaCampanhas(index + 1)
                                             }
-                                            className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold ${
-                                                paginaCampanhas === index + 1
-                                                    ? "bg-emerald-600 text-white"
-                                                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                            }`}
+                                            className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold ${paginaCampanhas === index + 1
+                                                ? "bg-emerald-600 text-white"
+                                                : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                                }`}
                                         >
                                             {index + 1}
                                         </button>
@@ -1006,7 +1013,7 @@ export default function Page() {
                                 <button
                                     disabled={
                                         paginaCampanhas ===
-                                            totalPaginasCampanhas ||
+                                        totalPaginasCampanhas ||
                                         totalPaginasCampanhas === 0
                                     }
                                     onClick={() =>
