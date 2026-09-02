@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/sidebar";
 import Header from "../components/header";
+import FloatingDialer from "../components/FloatingDialer";
 
 export default function DashboardLayout({
   children,
@@ -26,6 +27,7 @@ export default function DashboardLayout({
         <Header toggleSidebar={() => setCollapsed(!collapsed)} />
         <main className="p-6 bg-gradient-to-br from-[#37ad8c] via-[#45c9a5] to-[#1f8067] min-h-screen">
           {children}
+          <FloatingDialer />
         </main>
       </div>
     </div>

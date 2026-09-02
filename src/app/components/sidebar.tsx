@@ -70,18 +70,18 @@ const menuDiretor = [
   {
     name: "Comercial",
     icon: BriefcaseBusiness,
-    href: "/diretor/financeiro",
+    href: "/diretor/comercial",
   },
 
   {
     name: "Financeiro",
     icon: WalletMinimal,
-    href: "/diretor/admin",
+    href: "/diretor/financeiro",
   },
   {
     name: "Compras",
     icon: Percent,
-    href: "/diretor/admin",
+    href: "/diretor/compras",
   },
   {
     name: "Recursos Humanos (RH)",
@@ -91,7 +91,7 @@ const menuDiretor = [
   {
     name: "Jurídico",
     icon: Scale,
-    href: "/diretor/admin",
+    href: "/diretor/juridico",
   },
 
   {
@@ -176,6 +176,11 @@ const menuDiretor = [
 const supportItems = [
   {
     name: "Central de Ajuda",
+    icon: Headset,
+    href: "/central_ajuda",
+  },
+  {
+    name: "Slack",
     icon: Headset,
     href: "/central_ajuda",
   },

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+
 import {
     ArrowLeft,
     CalendarDays,
@@ -27,6 +28,7 @@ export default function RifaForm() {
     const [alertTipo, setAlertTipo] = useState<"success" | "error">(
         "success"
     );
+
     const [salvando, setSalvando] = useState(false);
 
     const gerarNumeroRifa = () => {
@@ -38,12 +40,10 @@ export default function RifaForm() {
     };
 
     useEffect(() => {
-  gerarNumeroRifa();
-}, []);
+        gerarNumeroRifa();
+    }, []);
 
-    const cadastrarRifa = async (
-        e: React.FormEvent<HTMLFormElement>
-    ) => {
+    const cadastrarRifa = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!numeroRifa.trim()) {
@@ -107,9 +107,7 @@ export default function RifaForm() {
             }
 
             setAlertTipo("success");
-            setAlert(
-                data.mensagem || "Rifa cadastrada com sucesso!"
-            );
+            setAlert(data.mensagem || "Rifa cadastrada com sucesso!");
 
             setNumeroRifa("");
             setTitulo("");
@@ -139,12 +137,14 @@ export default function RifaForm() {
 
     return (
         <>
+            {/* ALERTA */}
             {alert && (
                 <div
-                    className={`fixed right-5 top-5 z-[200] flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-xl ${alertTipo === "success"
-                        ? "bg-emerald-500"
-                        : "bg-red-500"
-                        }`}
+                    className={`fixed right-5 top-5 z-[200] flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-xl ${
+                        alertTipo === "success"
+                            ? "bg-emerald-500"
+                            : "bg-red-500"
+                    }`}
                 >
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
                         {alertTipo === "success" ? (
@@ -158,9 +158,10 @@ export default function RifaForm() {
                 </div>
             )}
 
-            <div className="w-full">
+            {/* CONTAINER PRINCIPAL */}
+            <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">
+                {/* CABEÇALHO */}
                 <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-white">
                             Registrar nova rifa
@@ -178,16 +179,14 @@ export default function RifaForm() {
                         <ArrowLeft className="h-4 w-4" />
                         Voltar
                     </Link>
-
                 </div>
 
+                {/* FORMULÁRIO */}
                 <form onSubmit={cadastrarRifa}>
-
+                    {/* INFORMAÇÕES DA RIFA */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
                         <div className="border-b border-slate-200 px-6 py-5">
                             <div className="flex items-center gap-3">
-
                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
                                     <Info className="h-5 w-5 text-teal-600" />
                                 </div>
@@ -198,15 +197,15 @@ export default function RifaForm() {
                                     </h2>
 
                                     <p className="mt-0.5 text-xs text-slate-500">
-                                        Informações básicas para identificação da rifa.
+                                        Informações básicas para identificação
+                                        da rifa.
                                     </p>
                                 </div>
-
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
-
+                            {/* NÚMERO */}
                             <div>
                                 <label
                                     htmlFor="numero_rifa"
@@ -231,6 +230,7 @@ export default function RifaForm() {
                                 </div>
                             </div>
 
+                            {/* TÍTULO */}
                             <div>
                                 <label
                                     htmlFor="titulo"
@@ -251,6 +251,7 @@ export default function RifaForm() {
                                 />
                             </div>
 
+                            {/* DESCRIÇÃO */}
                             <div className="md:col-span-2">
                                 <label
                                     htmlFor="descricao"
@@ -270,15 +271,13 @@ export default function RifaForm() {
                                     className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
                                 />
                             </div>
-
                         </div>
                     </div>
 
+                    {/* CONFIGURAÇÃO */}
                     <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
                         <div className="border-b border-slate-200 px-6 py-5">
                             <div className="flex items-center gap-3">
-
                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
                                     <CircleDollarSign className="h-5 w-5 text-teal-600" />
                                 </div>
@@ -289,15 +288,15 @@ export default function RifaForm() {
                                     </h2>
 
                                     <p className="mt-0.5 text-xs text-slate-500">
-                                        Defina o valor e a quantidade de números.
+                                        Defina o valor e a quantidade de
+                                        números.
                                     </p>
                                 </div>
-
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
-
+                            {/* VALOR */}
                             <div>
                                 <label
                                     htmlFor="valor_numero"
@@ -326,6 +325,7 @@ export default function RifaForm() {
                                 </div>
                             </div>
 
+                            {/* QUANTIDADE */}
                             <div>
                                 <label
                                     htmlFor="total_numeros"
@@ -346,15 +346,13 @@ export default function RifaForm() {
                                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
                                 />
                             </div>
-
                         </div>
                     </div>
 
+                    {/* SORTEIO E IMAGEM */}
                     <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
                         <div className="border-b border-slate-200 px-6 py-5">
                             <div className="flex items-center gap-3">
-
                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
                                     <CalendarDays className="h-5 w-5 text-teal-600" />
                                 </div>
@@ -365,15 +363,15 @@ export default function RifaForm() {
                                     </h2>
 
                                     <p className="mt-0.5 text-xs text-slate-500">
-                                        Defina quando será o sorteio e a imagem da campanha.
+                                        Defina quando será o sorteio e a imagem
+                                        da campanha.
                                     </p>
                                 </div>
-
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
-
+                            {/* DATA */}
                             <div>
                                 <label
                                     htmlFor="data_sorteio"
@@ -397,6 +395,7 @@ export default function RifaForm() {
                                 </div>
                             </div>
 
+                            {/* IMAGEM */}
                             <div>
                                 <label
                                     htmlFor="imagem"
@@ -420,14 +419,12 @@ export default function RifaForm() {
                                     />
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
+                    {/* AVISO */}
                     <div className="mt-5 rounded-2xl border border-teal-100 bg-teal-50/50 p-5">
-
                         <div className="flex gap-3">
-
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100">
                                 <Ticket className="h-4 w-4 text-teal-700" />
                             </div>
@@ -438,16 +435,15 @@ export default function RifaForm() {
                                 </h3>
 
                                 <p className="mt-1 text-xs leading-5 text-teal-700">
-                                    Ao cadastrar a rifa, os números serão criados
-                                    automaticamente como disponíveis.
+                                    Ao cadastrar a rifa, os números serão
+                                    criados automaticamente como disponíveis.
                                 </p>
                             </div>
-
                         </div>
                     </div>
 
+                    {/* BOTÕES */}
                     <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-
                         <Link
                             href="/diretor/rifa"
                             className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
@@ -467,9 +463,7 @@ export default function RifaForm() {
                                 ? "Cadastrando..."
                                 : "Cadastrar Rifa"}
                         </button>
-
                     </div>
-
                 </form>
             </div>
         </>

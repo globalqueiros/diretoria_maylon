@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { db2 } from "../../lib/db";
+import { db } from "../../lib/db";
 
 export async function GET() {
     try {
-        const [rows]: any = await db2.query(`
+        const [rows]: any = await db.query(`
             SELECT 
             b.nome,
             COUNT(a.id) AS total_assinantes

@@ -276,7 +276,7 @@ export default function Page() {
                     </div>
 
                     <Link
-                        href="/diretor/funcionarios"
+                        href="/diretor/colaboradores"
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
                     >
                         <ArrowLeft className="h-4 w-4" />

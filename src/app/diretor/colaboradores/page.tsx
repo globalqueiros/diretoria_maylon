@@ -1,6 +1,6 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     Plus,
@@ -8,6 +8,10 @@ import {
     RefreshCw,
     BriefcaseBusiness,
     FileText,
+    Eye,
+    Download,
+    Trash2,
+    ArrowLeft,
 } from "lucide-react";
 
 type Usuario = {
@@ -64,6 +68,8 @@ type ApiResponse<T> = {
 const REGISTROS_POR_PAGINA = 10;
 
 export default function Page() {
+    const router = useRouter();
+
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [loadingUsuarios, setLoadingUsuarios] = useState(true);
     const [erroUsuarios, setErroUsuarios] = useState<string | null>(null);
@@ -108,9 +114,7 @@ export default function Page() {
         return [];
     }
 
-    async function lerJson<T>(
-        response: Response
-    ): Promise<T | null> {
+    async function lerJson<T>(response: Response): Promise<T | null> {
         const texto = await response.text();
 
         if (!texto) {
@@ -120,10 +124,7 @@ export default function Page() {
         try {
             return JSON.parse(texto) as T;
         } catch {
-            console.error(
-                "Resposta que não é JSON:",
-                texto.substring(0, 500)
-            );
+            console.error("Resposta que não é JSON:", texto.substring(0, 500));
 
             throw new Error(
                 response.status === 404
@@ -133,9 +134,7 @@ export default function Page() {
         }
     }
 
-    function formatarTelefone(
-        telefone?: string | null
-    ) {
+    function formatarTelefone(telefone?: string | null) {
         if (!telefone) {
             return "—";
         }
@@ -143,25 +142,17 @@ export default function Page() {
         const numeros = telefone.replace(/\D/g, "");
 
         if (numeros.length === 11) {
-            return numeros.replace(
-                /(\d{2})(\d{5})(\d{4})/,
-                "($1) $2-$3"
-            );
+            return numeros.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
         }
 
         if (numeros.length === 10) {
-            return numeros.replace(
-                /(\d{2})(\d{4})(\d{4})/,
-                "($1) $2-$3"
-            );
+            return numeros.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
         }
 
         return telefone;
     }
 
-    function formatarData(
-        data?: string | null
-    ) {
+    function formatarData(data?: string | null) {
         if (!data) {
             return "—";
         }
@@ -172,28 +163,18 @@ export default function Page() {
             return data;
         }
 
-        return dataObj.toLocaleDateString(
-            "pt-BR",
-            {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-            }
-        );
+        return dataObj.toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
     }
 
     function nomeVaga(vaga: Vaga) {
-        return (
-            vaga.titulo ||
-            vaga.nome ||
-            vaga.vaga ||
-            "Vaga não informada"
-        );
+        return vaga.titulo || vaga.nome || vaga.vaga || "Vaga não informada";
     }
 
-    function nomeCandidato(
-        candidato: Candidato
-    ) {
+    function nomeCandidato(candidato: Candidato) {
         return (
             candidato.nome ||
             candidato.full_name ||
@@ -202,30 +183,17 @@ export default function Page() {
         );
     }
 
-    function nomeDaVagaDoCandidato(
-        candidato: Candidato
-    ) {
-        return (
-            candidato.vaga ||
-            candidato.vaga_titulo ||
-            "—"
-        );
+    function nomeDaVagaDoCandidato(candidato: Candidato) {
+        return candidato.vaga || candidato.vaga_titulo || "—";
     }
 
-    function statusVaga(
-        status?: string | null
-    ) {
+    function statusVaga(status?: string | null) {
         const valor = status?.toLowerCase();
 
-        if (
-            valor === "aberta" ||
-            valor === "open" ||
-            valor === "active"
-        ) {
+        if (valor === "aberta" || valor === "open" || valor === "active") {
             return {
                 texto: "Aberta",
-                classe:
-                    "bg-emerald-100 text-emerald-700",
+                classe: "bg-emerald-100 text-emerald-700",
             };
         }
 
@@ -236,32 +204,24 @@ export default function Page() {
         ) {
             return {
                 texto: "Encerrada",
-                classe:
-                    "bg-slate-100 text-slate-600",
+                classe: "bg-slate-100 text-slate-600",
             };
         }
 
-        if (
-            valor === "pausada" ||
-            valor === "paused"
-        ) {
+        if (valor === "pausada" || valor === "paused") {
             return {
                 texto: "Pausada",
-                classe:
-                    "bg-amber-100 text-amber-700",
+                classe: "bg-amber-100 text-amber-700",
             };
         }
 
         return {
             texto: status || "Não informado",
-            classe:
-                "bg-slate-100 text-slate-600",
+            classe: "bg-slate-100 text-slate-600",
         };
     }
 
-    function statusCandidato(
-        status?: string | null
-    ) {
+    function statusCandidato(status?: string | null) {
         const valor = status?.toLowerCase();
 
         if (
@@ -272,30 +232,21 @@ export default function Page() {
         ) {
             return {
                 texto: "Aprovado",
-                classe:
-                    "bg-emerald-100 text-emerald-700",
+                classe: "bg-emerald-100 text-emerald-700",
             };
         }
 
-        if (
-            valor === "reprovado" ||
-            valor === "rejected"
-        ) {
+        if (valor === "reprovado" || valor === "rejected") {
             return {
                 texto: "Reprovado",
-                classe:
-                    "bg-red-100 text-red-700",
+                classe: "bg-red-100 text-red-700",
             };
         }
 
-        if (
-            valor === "entrevista" ||
-            valor === "interview"
-        ) {
+        if (valor === "entrevista" || valor === "interview") {
             return {
                 texto: "Entrevista",
-                classe:
-                    "bg-blue-100 text-blue-700",
+                classe: "bg-blue-100 text-blue-700",
             };
         }
 
@@ -307,15 +258,13 @@ export default function Page() {
         ) {
             return {
                 texto: "Em análise",
-                classe:
-                    "bg-amber-100 text-amber-700",
+                classe: "bg-amber-100 text-amber-700",
             };
         }
 
         return {
             texto: status || "Não informado",
-            classe:
-                "bg-slate-100 text-slate-600",
+            classe: "bg-slate-100 text-slate-600",
         };
     }
 
@@ -324,48 +273,33 @@ export default function Page() {
             setLoadingUsuarios(true);
             setErroUsuarios(null);
 
-            const response = await fetch(
-                "/api/users",
-                {
-                    method: "GET",
-                    cache: "no-store",
-                    headers: {
-                        Accept:
-                            "application/json",
-                    },
-                }
-            );
+            const response = await fetch("/api/users", {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    Accept: "application/json",
+                },
+            });
 
-            const data =
-                await lerJson<
-                    ApiResponse<Usuario> |
-                    Usuario[]
-                >(response);
+            const data = await lerJson<ApiResponse<Usuario> | Usuario[]>(
+                response
+            );
 
             if (!response.ok) {
                 const mensagem =
-                    data &&
-                    !Array.isArray(data) &&
-                    data.message
+                    data && !Array.isArray(data) && data.message
                         ? data.message
                         : `Erro ao carregar usuários. Status: ${response.status}`;
 
                 throw new Error(mensagem);
             }
 
-            const lista =
-                extrairLista<Usuario>(
-                    data,
-                    "usuarios"
-                );
+            const lista = extrairLista<Usuario>(data, "usuarios");
 
             setUsuarios(lista);
             setPaginaUsuarios(1);
         } catch (error) {
-            console.error(
-                "Erro ao carregar usuários:",
-                error
-            );
+            console.error("Erro ao carregar usuários:", error);
 
             setUsuarios([]);
 
@@ -384,48 +318,31 @@ export default function Page() {
             setLoadingVagas(true);
             setErroVagas(null);
 
-            const response = await fetch(
-                "/api/vagas",
-                {
-                    method: "GET",
-                    cache: "no-store",
-                    headers: {
-                        Accept:
-                            "application/json",
-                    },
-                }
-            );
+            const response = await fetch("/api/vagas", {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    Accept: "application/json",
+                },
+            });
 
-            const data =
-                await lerJson<
-                    ApiResponse<Vaga> |
-                    Vaga[]
-                >(response);
+            const data = await lerJson<ApiResponse<Vaga> | Vaga[]>(response);
 
             if (!response.ok) {
                 const mensagem =
-                    data &&
-                    !Array.isArray(data) &&
-                    data.message
+                    data && !Array.isArray(data) && data.message
                         ? data.message
                         : `Erro ao carregar vagas. Status: ${response.status}`;
 
                 throw new Error(mensagem);
             }
 
-            const lista =
-                extrairLista<Vaga>(
-                    data,
-                    "vagas"
-                );
+            const lista = extrairLista<Vaga>(data, "vagas");
 
             setVagas(lista);
             setPaginaVagas(1);
         } catch (error) {
-            console.error(
-                "Erro ao carregar vagas:",
-                error
-            );
+            console.error("Erro ao carregar vagas:", error);
 
             setVagas([]);
 
@@ -444,48 +361,33 @@ export default function Page() {
             setLoadingCandidatos(true);
             setErroCandidatos(null);
 
-            const response = await fetch(
-                "/api/candidatos",
-                {
-                    method: "GET",
-                    cache: "no-store",
-                    headers: {
-                        Accept:
-                            "application/json",
-                    },
-                }
-            );
+            const response = await fetch("/api/candidatos", {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    Accept: "application/json",
+                },
+            });
 
-            const data =
-                await lerJson<
-                    ApiResponse<Candidato> |
-                    Candidato[]
-                >(response);
+            const data = await lerJson<ApiResponse<Candidato> | Candidato[]>(
+                response
+            );
 
             if (!response.ok) {
                 const mensagem =
-                    data &&
-                    !Array.isArray(data) &&
-                    data.message
+                    data && !Array.isArray(data) && data.message
                         ? data.message
                         : `Erro ao carregar candidatos. Status: ${response.status}`;
 
                 throw new Error(mensagem);
             }
 
-            const lista =
-                extrairLista<Candidato>(
-                    data,
-                    "candidatos"
-                );
+            const lista = extrairLista<Candidato>(data, "candidatos");
 
             setCandidatos(lista);
             setPaginaCandidatos(1);
         } catch (error) {
-            console.error(
-                "Erro ao carregar candidatos:",
-                error
-            );
+            console.error("Erro ao carregar candidatos:", error);
 
             setCandidatos([]);
 
@@ -499,6 +401,16 @@ export default function Page() {
         }
     }
 
+    function atualizarData() {
+        const agora = new Date();
+
+        setAtualizadoEm(
+            `${agora.toLocaleTimeString("pt-BR")} ${agora.toLocaleDateString(
+                "pt-BR"
+            )}`
+        );
+    }
+
     async function atualizarTudo() {
         await Promise.all([
             carregarUsuarios(),
@@ -509,18 +421,6 @@ export default function Page() {
         atualizarData();
     }
 
-    function atualizarData() {
-        const agora = new Date();
-
-        setAtualizadoEm(
-            `${agora.toLocaleTimeString(
-                "pt-BR"
-            )} ${agora.toLocaleDateString(
-                "pt-BR"
-            )}`
-        );
-    }
-
     useEffect(() => {
         carregarUsuarios();
         carregarVagas();
@@ -528,107 +428,58 @@ export default function Page() {
         atualizarData();
     }, []);
 
-    const totalPaginasUsuarios =
-        Math.max(
-            1,
-            Math.ceil(
-                usuarios.length /
-                    REGISTROS_POR_PAGINA
-            )
-        );
+    const totalPaginasUsuarios = Math.max(
+        1,
+        Math.ceil(usuarios.length / REGISTROS_POR_PAGINA)
+    );
 
     const primeiroUsuario =
-        (paginaUsuarios - 1) *
-        REGISTROS_POR_PAGINA;
+        (paginaUsuarios - 1) * REGISTROS_POR_PAGINA;
 
-    const ultimoUsuario =
-        primeiroUsuario +
-        REGISTROS_POR_PAGINA;
+    const ultimoUsuario = primeiroUsuario + REGISTROS_POR_PAGINA;
 
     const usuariosPaginados = useMemo(
-        () =>
-            usuarios.slice(
-                primeiroUsuario,
-                ultimoUsuario
-            ),
-        [
-            usuarios,
-            primeiroUsuario,
-            ultimoUsuario,
-        ]
+        () => usuarios.slice(primeiroUsuario, ultimoUsuario),
+        [usuarios, primeiroUsuario, ultimoUsuario]
     );
 
-    const totalPaginasVagas =
-        Math.max(
-            1,
-            Math.ceil(
-                vagas.length /
-                    REGISTROS_POR_PAGINA
-            )
-        );
+    const totalPaginasVagas = Math.max(
+        1,
+        Math.ceil(vagas.length / REGISTROS_POR_PAGINA)
+    );
 
     const primeiroVaga =
-        (paginaVagas - 1) *
-        REGISTROS_POR_PAGINA;
+        (paginaVagas - 1) * REGISTROS_POR_PAGINA;
 
-    const ultimoVaga =
-        primeiroVaga +
-        REGISTROS_POR_PAGINA;
+    const ultimoVaga = primeiroVaga + REGISTROS_POR_PAGINA;
 
     const vagasPaginadas = useMemo(
-        () =>
-            vagas.slice(
-                primeiroVaga,
-                ultimoVaga
-            ),
-        [
-            vagas,
-            primeiroVaga,
-            ultimoVaga,
-        ]
+        () => vagas.slice(primeiroVaga, ultimoVaga),
+        [vagas, primeiroVaga, ultimoVaga]
     );
 
-    const totalPaginasCandidatos =
-        Math.max(
-            1,
-            Math.ceil(
-                candidatos.length /
-                    REGISTROS_POR_PAGINA
-            )
-        );
+    const totalPaginasCandidatos = Math.max(
+        1,
+        Math.ceil(candidatos.length / REGISTROS_POR_PAGINA)
+    );
 
     const primeiroCandidato =
-        (paginaCandidatos - 1) *
-        REGISTROS_POR_PAGINA;
+        (paginaCandidatos - 1) * REGISTROS_POR_PAGINA;
 
     const ultimoCandidato =
-        primeiroCandidato +
-        REGISTROS_POR_PAGINA;
+        primeiroCandidato + REGISTROS_POR_PAGINA;
 
     const candidatosPaginados = useMemo(
-        () =>
-            candidatos.slice(
-                primeiroCandidato,
-                ultimoCandidato
-            ),
-        [
-            candidatos,
-            primeiroCandidato,
-            ultimoCandidato,
-        ]
+        () => candidatos.slice(primeiroCandidato, ultimoCandidato),
+        [candidatos, primeiroCandidato, ultimoCandidato]
     );
 
     function irParaPagina(
         pagina: number,
         totalPaginas: number,
-        setPagina: (
-            pagina: number
-        ) => void
+        setPagina: (pagina: number) => void
     ) {
-        if (
-            pagina < 1 ||
-            pagina > totalPaginas
-        ) {
+        if (pagina < 1 || pagina > totalPaginas) {
             return;
         }
 
@@ -637,15 +488,13 @@ export default function Page() {
 
     return (
         <div className="min-h-screen text-white">
-            <div className="mx-auto max-w-[1600px]">
-
+            <div className="mx-auto max-w-8xl">
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-white">
                                 Recursos Humanos (RH)
                             </h1>
-
                             <p className="mt-1 text-sm text-white">
                                 Acompanhe as principais informações dos funcionários cadastrados.
                             </p>
@@ -655,9 +504,7 @@ export default function Page() {
                     <div className="flex flex-wrap items-center gap-2">
                         <button
                             type="button"
-                            onClick={
-                                atualizarTudo
-                            }
+                            onClick={atualizarTudo}
                             disabled={
                                 loadingUsuarios ||
                                 loadingVagas ||
@@ -674,7 +521,6 @@ export default function Page() {
                                         : ""
                                 }`}
                             />
-
                             Atualizar
                         </button>
 
@@ -690,7 +536,6 @@ export default function Page() {
 
                 <section>
                     <div className="overflow-hidden rounded-2xl bg-white shadow-xl">
-
                         <div className="flex flex-col gap-4 px-5 py-5 sm:px-6 md:flex-row md:items-center md:justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-lg shadow-teal-900/20">
@@ -701,7 +546,6 @@ export default function Page() {
                                     <h2 className="text-xl font-semibold text-slate-800">
                                         Funcionários cadastrados
                                     </h2>
-
                                     <p className="mt-1 text-xs text-slate-500">
                                         Lista de pessoas cadastradas no sistema.
                                     </p>
@@ -711,8 +555,7 @@ export default function Page() {
                             <div className="text-sm text-slate-500 md:text-right">
                                 Atualizado em{" "}
                                 <strong className="text-slate-700">
-                                    {atualizadoEm ||
-                                        "—"}
+                                    {atualizadoEm || "—"}
                                 </strong>
                             </div>
                         </div>
@@ -730,73 +573,51 @@ export default function Page() {
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-black">
                                             Matrícula
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-black">
                                             Nome
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-black">
                                             E-mail
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-black">
                                             Whatsapp
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-black">
-                                            Vaga
+                                            Tipo
                                         </th>
-
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-black">
                                             Status
                                         </th>
+                                        <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-black">
+                                            Ações
+                                        </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y text-sm divide-slate-100 bg-white">
+
+                                <tbody className="divide-y divide-slate-100 bg-white">
                                     {loadingUsuarios ? (
-                                        Array.from({
-                                            length: 5,
-                                        }).map(
-                                            (_, index) => (
-                                                <tr
-                                                    key={
-                                                        index
-                                                    }
-                                                >
-                                                    <td
-                                                        colSpan={
-                                                            6
-                                                        }
-                                                        className="px-6 py-5"
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-56 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
-                                    ) : usuariosPaginados.length ===
-                                      0 ? (
+                                        Array.from({ length: 5 }).map((_, index) => (
+                                            <tr key={index}>
+                                                <td colSpan={7} className="px-6 py-5">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-56 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : usuariosPaginados.length === 0 ? (
                                         <tr>
-                                            <td
-                                                colSpan={
-                                                    6
-                                                }
-                                                className="px-6 py-12 text-center"
-                                            >
+                                            <td colSpan={7} className="px-6 py-12 text-center">
                                                 <div className="mx-auto flex max-w-md flex-col items-center">
                                                     <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                                                         <User className="h-6 w-6 text-slate-400" />
                                                     </div>
-
                                                     <h3 className="text-base font-semibold text-slate-700">
                                                         Nenhum funcionário encontrado
                                                     </h3>
-
                                                     <p className="mt-1 text-sm text-slate-500">
                                                         Não há cadastros disponíveis no momento.
                                                     </p>
@@ -804,230 +625,195 @@ export default function Page() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        usuariosPaginados.map(
-                                            (
-                                                usuario
-                                            ) => (
-                                                <tr
-                                                    key={String(
-                                                        usuario.matricula
-                                                    )}
-                                                    className="transition hover:bg-slate-50"
-                                                >
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className="text-sm font-bold text-black">
-                                                            {
-                                                                usuario.matricula
-                                                            }
-                                                        </span>
-                                                    </td>
+                                        usuariosPaginados.map((usuario) => (
+                                            <tr
+                                                key={String(usuario.matricula)}
+                                                className="transition hover:bg-slate-50"
+                                            >
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="text-sm font-bold text-black">
+                                                        {usuario.matricula}
+                                                    </span>
+                                                </td>
 
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-sm font-bold text-teal-700">
-                                                                {usuario.profile_image &&
-                                                                usuario.profile_image !==
-                                                                    "/favicon.ico" ? (
-                                                                    <img
-                                                                        src={
-                                                                            usuario.profile_image
-                                                                        }
-                                                                        alt={
-                                                                            usuario.full_name ||
-                                                                            "Usuário"
-                                                                        }
-                                                                        className="h-full w-full object-cover"
-                                                                        onError={(
-                                                                            e
-                                                                        ) => {
-                                                                            e.currentTarget.style.display =
-                                                                                "none";
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    usuario.full_name
-                                                                        ?.charAt(
-                                                                            0
-                                                                        )
-                                                                        ?.toUpperCase() ||
-                                                                    "U"
-                                                                )}
-                                                            </div>
-
-                                                            <div className="min-w-0">
-                                                                <p className="truncate font-semibold text-black">
-                                                                    {usuario.full_name ||
-                                                                        "Nome não informado"}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-
-                                                    <td className="px-6 py-4">
-                                                        <span className="font-medium text-black">
-                                                            {usuario.email ||
-                                                                "—"}
-                                                        </span>
-                                                    </td>
-
-                                                    <td className="px-6 py-4">
-                                                        <span className="font-medium text-black">
-                                                            {formatarTelefone(
-                                                                usuario.phone
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-sm font-bold text-teal-700">
+                                                            {usuario.profile_image &&
+                                                            usuario.profile_image !== "/favicon.ico" ? (
+                                                                <img
+                                                                    src={usuario.profile_image}
+                                                                    alt={usuario.full_name || "Usuário"}
+                                                                    className="h-full w-full object-cover"
+                                                                    onError={(event) => {
+                                                                        event.currentTarget.style.display =
+                                                                            "none";
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                usuario.full_name
+                                                                    ?.charAt(0)
+                                                                    ?.toUpperCase() || "U"
                                                             )}
-                                                        </span>
-                                                    </td>
+                                                        </div>
 
-                                                    <td className="px-6 py-4">
-                                                        <span className="inline-flex rounded-full px-3 py-1 font-bold text-black font-weight">
-                                                            {usuario.user_type ||
-                                                                "Não informado"}
-                                                        </span>
-                                                    </td>
+                                                        <p className="truncate font-semibold text-black">
+                                                            {usuario.full_name || "Nome não informado"}
+                                                        </p>
+                                                    </div>
+                                                </td>
 
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span
-                                                            className={`inline-flex rounded-full px-3 py-1 font-bold ${
-                                                                usuario.status ===
-                                                                "active"
-                                                                    ? "text-emerald-700"
-                                                                    : usuario.status ===
-                                                                        "blocked"
-                                                                      ? "text-red-700"
-                                                                      : "text-slate-600"
-                                                            }`}
+                                                <td className="px-6 py-4">
+                                                    <span className="font-medium text-black">
+                                                        {usuario.email || "—"}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <span className="font-medium text-black">
+                                                        {formatarTelefone(usuario.phone)}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <span className="font-semibold text-black">
+                                                        {usuario.user_type || "Não informado"}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-6 py-4 text-center">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                                                            usuario.status === "active"
+                                                                ? "bg-emerald-100 text-emerald-700"
+                                                                : usuario.status === "blocked"
+                                                                  ? "bg-red-100 text-red-700"
+                                                                  : "bg-slate-100 text-slate-600"
+                                                        }`}
+                                                    >
+                                                        {usuario.status === "active"
+                                                            ? "Ativo"
+                                                            : usuario.status === "blocked"
+                                                              ? "Bloqueado"
+                                                              : usuario.status === "inactive"
+                                                                ? "Inativo"
+                                                                : "Não informado"}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            title="Visualizar"
+                                                            className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
                                                         >
-                                                            {usuario.status ===
-                                                            "active"
-                                                                ? "Ativo"
-                                                                : usuario.status ===
-                                                                    "blocked"
-                                                                  ? "Bloqueado"
-                                                                  : usuario.status ===
-                                                                      "inactive"
-                                                                    ? "Inativo"
-                                                                    : "Não informado"}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
+                                                            <Eye size={18} />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            title="Baixar"
+                                                            className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
+                                                        >
+                                                            <Download size={18} />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            title="Excluir"
+                                                            className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
                                     )}
                                 </tbody>
                             </table>
                         </div>
 
-                        {!loadingUsuarios &&
-                            usuarios.length >
-                                0 && (
-                                <div className="border-t border-slate-200 px-5 py-4 sm:px-6">
-                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                        <span className="text-xs text-slate-500">
-                                            Mostrando{" "}
-                                            <strong className="text-slate-700">
-                                                {
-                                                    primeiroUsuario +
-                                                    1
-                                                }
-                                            </strong>{" "}
-                                            até{" "}
-                                            <strong className="text-slate-700">
-                                                {Math.min(
-                                                    ultimoUsuario,
-                                                    usuarios.length
-                                                )}
-                                            </strong>{" "}
-                                            de{" "}
-                                            <strong className="text-slate-700">
-                                                {
-                                                    usuarios.length
-                                                }
-                                            </strong>{" "}
-                                            registros
-                                        </span>
+                        {!loadingUsuarios && usuarios.length > 0 && (
+                            <div className="border-t border-slate-200 px-5 py-4 sm:px-6">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                    <span className="text-xs text-slate-500">
+                                        Mostrando{" "}
+                                        <strong className="text-slate-700">
+                                            {primeiroUsuario + 1}
+                                        </strong>{" "}
+                                        até{" "}
+                                        <strong className="text-slate-700">
+                                            {Math.min(ultimoUsuario, usuarios.length)}
+                                        </strong>{" "}
+                                        de{" "}
+                                        <strong className="text-slate-700">
+                                            {usuarios.length}
+                                        </strong>{" "}
+                                        registros
+                                    </span>
 
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    irParaPagina(
-                                                        paginaUsuarios -
-                                                            1,
-                                                        totalPaginasUsuarios,
-                                                        setPaginaUsuarios
-                                                    )
-                                                }
-                                                disabled={
-                                                    paginaUsuarios ===
-                                                    1
-                                                }
-                                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                            >
-                                                Anterior
-                                            </button>
-
-                                            {Array.from(
-                                                {
-                                                    length: totalPaginasUsuarios,
-                                                },
-                                                (
-                                                    _,
-                                                    i
-                                                ) =>
-                                                    i +
-                                                    1
-                                            ).map(
-                                                (
-                                                    pagina
-                                                ) => (
-                                                    <button
-                                                        key={
-                                                            pagina
-                                                        }
-                                                        type="button"
-                                                        onClick={() =>
-                                                            irParaPagina(
-                                                                pagina,
-                                                                totalPaginasUsuarios,
-                                                                setPaginaUsuarios
-                                                            )
-                                                        }
-                                                        className={`h-10 min-w-10 rounded-lg px-3 text-sm font-medium transition ${
-                                                            paginaUsuarios ===
-                                                            pagina
-                                                                ? "bg-teal-600 text-white"
-                                                                : "border border-slate-300 text-slate-600 hover:bg-slate-100"
-                                                        }`}
-                                                    >
-                                                        {
-                                                            pagina
-                                                        }
-                                                    </button>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                irParaPagina(
+                                                    paginaUsuarios - 1,
+                                                    totalPaginasUsuarios,
+                                                    setPaginaUsuarios
                                                 )
-                                            )}
+                                            }
+                                            disabled={paginaUsuarios === 1}
+                                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            Anterior
+                                        </button>
 
+                                        {Array.from(
+                                            { length: totalPaginasUsuarios },
+                                            (_, i) => i + 1
+                                        ).map((pagina) => (
                                             <button
+                                                key={pagina}
                                                 type="button"
                                                 onClick={() =>
                                                     irParaPagina(
-                                                        paginaUsuarios +
-                                                            1,
+                                                        pagina,
                                                         totalPaginasUsuarios,
                                                         setPaginaUsuarios
                                                     )
                                                 }
-                                                disabled={
-                                                    paginaUsuarios ===
-                                                    totalPaginasUsuarios
-                                                }
-                                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                                className={`h-10 min-w-10 rounded-lg px-3 text-sm font-medium transition ${
+                                                    paginaUsuarios === pagina
+                                                        ? "bg-teal-600 text-white"
+                                                        : "border border-slate-300 text-slate-600 hover:bg-slate-100"
+                                                }`}
                                             >
-                                                Próxima
+                                                {pagina}
                                             </button>
-                                        </div>
+                                        ))}
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                irParaPagina(
+                                                    paginaUsuarios + 1,
+                                                    totalPaginasUsuarios,
+                                                    setPaginaUsuarios
+                                                )
+                                            }
+                                            disabled={
+                                                paginaUsuarios === totalPaginasUsuarios
+                                            }
+                                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            Próxima
+                                        </button>
                                     </div>
                                 </div>
-                            )}
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -1043,7 +829,6 @@ export default function Page() {
                                     <h2 className="text-lg font-bold text-black">
                                         Vagas Abertas
                                     </h2>
-
                                     <p className="mt-1 text-xs text-slate-500">
                                         Vagas disponíveis para recrutamento.
                                     </p>
@@ -1051,8 +836,7 @@ export default function Page() {
                             </div>
 
                             <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">
-                                {vagas.length}{" "}
-                                vagas
+                                {vagas.length} vagas
                             </span>
                         </div>
 
@@ -1069,212 +853,189 @@ export default function Page() {
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             ID
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase text-black">
                                             Vaga
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase text-black">
                                             Plataforma
                                         </th>
-
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             Começo
                                         </th>
-
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             Encerramento
                                         </th>
-
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             Status
+                                        </th>
+                                        <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
+                                            Ações
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody className="divide-y divide-slate-100 bg-white">
                                     {loadingVagas ? (
-                                        Array.from({
-                                            length: 4,
-                                        }).map(
-                                            (_, index) => (
-                                                <tr
-                                                    key={
-                                                        index
-                                                    }
-                                                >
-                                                    <td
-                                                        colSpan={
-                                                            6
-                                                        }
-                                                        className="px-6 py-5"
-                                                    >
-                                                        <div className="flex gap-4">
-                                                            <div className="h-4 w-12 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
-                                    ) : vagasPaginadas.length ===
-                                      0 ? (
+                                        Array.from({ length: 4 }).map((_, index) => (
+                                            <tr key={index}>
+                                                <td colSpan={7} className="px-6 py-5">
+                                                    <div className="flex gap-4">
+                                                        <div className="h-4 w-12 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : vagasPaginadas.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan={
-                                                    6
-                                                }
+                                                colSpan={7}
                                                 className="px-6 py-12 text-center text-sm text-slate-500"
                                             >
                                                 Nenhuma vaga encontrada.
                                             </td>
                                         </tr>
                                     ) : (
-                                        vagasPaginadas.map(
-                                            (
-                                                vaga
-                                            ) => {
-                                                const status =
-                                                    statusVaga(
-                                                        vaga.status
-                                                    );
+                                        vagasPaginadas.map((vaga) => {
+                                            const status = statusVaga(vaga.status);
 
-                                                return (
-                                                    <tr
-                                                        key={String(
-                                                            vaga.id
+                                            return (
+                                                <tr
+                                                    key={String(vaga.id)}
+                                                    className="transition hover:bg-slate-50"
+                                                >
+                                                    <td className="px-6 py-4 text-center font-bold text-black">
+                                                        {vaga.id}
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-semibold text-black">
+                                                            {nomeVaga(vaga)}
+                                                        </span>
+                                                    </td>
+
+                                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                                        {vaga.plataformas ||
+                                                            vaga.plataforma ||
+                                                            "—"}
+                                                    </td>
+
+                                                    <td className="px-6 py-4 text-center text-sm text-slate-600">
+                                                        {formatarData(
+                                                            vaga.data_inicio ||
+                                                                vaga.inicio ||
+                                                                vaga.comeco
                                                         )}
-                                                        className="transition hover:bg-slate-50"
-                                                    >
-                                                        <td className="px-6 py-4 text-center font-bold text-black">
-                                                            {
-                                                                vaga.id
-                                                            }
-                                                        </td>
+                                                    </td>
 
-                                                        <td className="px-6 py-4">
-                                                            <span className="font-semibold text-black">
-                                                                {nomeVaga(
-                                                                    vaga
-                                                                )}
-                                                            </span>
-                                                        </td>
+                                                    <td className="px-6 py-4 text-center text-sm text-slate-600">
+                                                        {formatarData(
+                                                            vaga.data_fim ||
+                                                                vaga.encerramento
+                                                        )}
+                                                    </td>
 
-                                                        <td className="px-6 py-4 text-sm text-slate-600">
-                                                            {vaga.plataformas ||
-                                                                vaga.plataforma ||
-                                                                "—"}
-                                                        </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span
+                                                            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${status.classe}`}
+                                                        >
+                                                            {status.texto}
+                                                        </span>
+                                                    </td>
 
-                                                        <td className="px-6 py-4 text-center text-sm text-slate-600">
-                                                            {formatarData(
-                                                                vaga.data_inicio ||
-                                                                    vaga.inicio ||
-                                                                    vaga.comeco
-                                                            )}
-                                                        </td>
-
-                                                        <td className="px-6 py-4 text-center text-sm text-slate-600">
-                                                            {formatarData(
-                                                                vaga.data_fim ||
-                                                                    vaga.encerramento
-                                                            )}
-                                                        </td>
-
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span
-                                                                className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${status.classe}`}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex justify-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                title="Visualizar"
+                                                                className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
                                                             >
-                                                                {
-                                                                    status.texto
-                                                                }
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            }
-                                        )
+                                                                <Eye size={18} />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                title="Baixar"
+                                                                className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
+                                                            >
+                                                                <Download size={18} />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                title="Excluir"
+                                                                className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
                         </div>
 
-                        {!loadingVagas &&
-                            vagas.length >
-                                0 && (
-                                <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
-                                    <span className="text-xs text-slate-500">
-                                        Mostrando{" "}
-                                        <strong className="text-slate-700">
-                                            {
-                                                primeiroVaga +
-                                                1
-                                            }
-                                        </strong>{" "}
-                                        até{" "}
-                                        <strong className="text-slate-700">
-                                            {Math.min(
-                                                ultimoVaga,
-                                                vagas.length
-                                            )}
-                                        </strong>{" "}
-                                        de{" "}
-                                        <strong className="text-slate-700">
-                                            {
-                                                vagas.length
-                                            }
-                                        </strong>
+                        {!loadingVagas && vagas.length > 0 && (
+                            <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+                                <span className="text-xs text-slate-500">
+                                    Mostrando{" "}
+                                    <strong className="text-slate-700">
+                                        {primeiroVaga + 1}
+                                    </strong>{" "}
+                                    até{" "}
+                                    <strong className="text-slate-700">
+                                        {Math.min(ultimoVaga, vagas.length)}
+                                    </strong>{" "}
+                                    de{" "}
+                                    <strong className="text-slate-700">
+                                        {vagas.length}
+                                    </strong>
+                                </span>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            irParaPagina(
+                                                paginaVagas - 1,
+                                                totalPaginasVagas,
+                                                setPaginaVagas
+                                            )
+                                        }
+                                        disabled={paginaVagas === 1}
+                                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
+                                    >
+                                        Anterior
+                                    </button>
+
+                                    <span className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-bold text-white">
+                                        {paginaVagas}
                                     </span>
 
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                irParaPagina(
-                                                    paginaVagas -
-                                                        1,
-                                                    totalPaginasVagas,
-                                                    setPaginaVagas
-                                                )
-                                            }
-                                            disabled={
-                                                paginaVagas ===
-                                                1
-                                            }
-                                            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
-                                        >
-                                            Anterior
-                                        </button>
-
-                                        <span className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-bold text-white">
-                                            {
-                                                paginaVagas
-                                            }
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                irParaPagina(
-                                                    paginaVagas +
-                                                        1,
-                                                    totalPaginasVagas,
-                                                    setPaginaVagas
-                                                )
-                                            }
-                                            disabled={
-                                                paginaVagas ===
-                                                totalPaginasVagas
-                                            }
-                                            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
-                                        >
-                                            Próxima
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            irParaPagina(
+                                                paginaVagas + 1,
+                                                totalPaginasVagas,
+                                                setPaginaVagas
+                                            )
+                                        }
+                                        disabled={
+                                            paginaVagas === totalPaginasVagas
+                                        }
+                                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
+                                    >
+                                        Próxima
+                                    </button>
                                 </div>
-                            )}
+                            </div>
+                        )}
                     </section>
 
                     <section className="overflow-hidden rounded-2xl bg-white shadow-xl">
@@ -1288,7 +1049,6 @@ export default function Page() {
                                     <h2 className="text-lg font-bold text-black">
                                         Recrutamento de Currículos
                                     </h2>
-
                                     <p className="mt-1 text-xs text-slate-500">
                                         Candidatos inscritos nas vagas.
                                     </p>
@@ -1296,18 +1056,13 @@ export default function Page() {
                             </div>
 
                             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-                                {
-                                    candidatos.length
-                                }{" "}
-                                candidatos
+                                {candidatos.length} candidatos
                             </span>
                         </div>
 
                         {erroCandidatos && (
                             <div className="mx-5 my-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                {
-                                    erroCandidatos
-                                }
+                                {erroCandidatos}
                             </div>
                         )}
 
@@ -1318,69 +1073,47 @@ export default function Page() {
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             ID
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase text-black">
                                             Candidato
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase text-black">
                                             Vaga
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase text-black">
                                             Email
                                         </th>
-
                                         <th className="px-6 py-3 text-left text-xs font-bold uppercase text-black">
                                             Whatsapp
                                         </th>
-
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             Data
                                         </th>
-
                                         <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
                                             Status
+                                        </th>
+                                        <th className="px-6 py-3 text-center text-xs font-bold uppercase text-black">
+                                            Ações
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody className="divide-y divide-slate-100 bg-white">
                                     {loadingCandidatos ? (
-                                        Array.from({
-                                            length: 4,
-                                        }).map(
-                                            (_, index) => (
-                                                <tr
-                                                    key={
-                                                        index
-                                                    }
-                                                >
-                                                    <td
-                                                        colSpan={
-                                                            7
-                                                        }
-                                                        className="px-6 py-5"
-                                                    >
-                                                        <div className="flex gap-4">
-                                                            <div className="h-4 w-10 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-36 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
-                                                            <div className="h-4 w-44 animate-pulse rounded bg-slate-200" />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
-                                    ) : candidatosPaginados.length ===
-                                      0 ? (
+                                        Array.from({ length: 4 }).map((_, index) => (
+                                            <tr key={index}>
+                                                <td colSpan={8} className="px-6 py-5">
+                                                    <div className="flex gap-4">
+                                                        <div className="h-4 w-10 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-36 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                                                        <div className="h-4 w-44 animate-pulse rounded bg-slate-200" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : candidatosPaginados.length === 0 ? (
                                         <tr>
-                                            <td
-                                                colSpan={
-                                                    7
-                                                }
-                                                className="px-6 py-12 text-center"
-                                            >
+                                            <td colSpan={8} className="px-6 py-12 text-center">
                                                 <div className="mx-auto flex max-w-md flex-col items-center">
                                                     <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                                                         <FileText className="h-6 w-6 text-slate-400" />
@@ -1397,161 +1130,161 @@ export default function Page() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        candidatosPaginados.map(
-                                            (
-                                                candidato
-                                            ) => {
-                                                const status =
-                                                    statusCandidato(
-                                                        candidato.status
-                                                    );
+                                        candidatosPaginados.map((candidato) => {
+                                            const status = statusCandidato(
+                                                candidato.status
+                                            );
 
-                                                return (
-                                                    <tr
-                                                        key={String(
-                                                            candidato.id
-                                                        )}
-                                                        className="transition hover:bg-slate-50"
-                                                    >
-                                                        <td className="px-6 py-4 text-center font-bold text-black">
-                                                            {
-                                                                candidato.id
-                                                            }
-                                                        </td>
+                                            return (
+                                                <tr
+                                                    key={String(candidato.id)}
+                                                    className="transition hover:bg-slate-50"
+                                                >
+                                                    <td className="px-6 py-4 text-center font-bold text-black">
+                                                        {candidato.id}
+                                                    </td>
 
-                                                        <td className="px-6 py-4">
-                                                            <span className="font-semibold text-black">
-                                                                {nomeCandidato(
-                                                                    candidato
-                                                                )}
-                                                            </span>
-                                                        </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-semibold text-black">
+                                                            {nomeCandidato(candidato)}
+                                                        </span>
+                                                    </td>
 
-                                                        <td className="px-6 py-4">
-                                                            <span className="font-medium text-slate-700">
-                                                                {nomeDaVagaDoCandidato(
-                                                                    candidato
-                                                                )}
-                                                            </span>
-                                                        </td>
-
-                                                        <td className="px-6 py-4">
-                                                            <span className="font-medium text-black">
-                                                                {candidato.email ||
-                                                                    "—"}
-                                                            </span>
-                                                        </td>
-
-                                                        <td className="px-6 py-4">
-                                                            <span className="font-medium text-black">
-                                                                {formatarTelefone(
-                                                                    candidato.phone ||
-                                                                        candidato.telefone ||
-                                                                        candidato.whatsapp
-                                                                )}
-                                                            </span>
-                                                        </td>
-
-                                                        <td className="px-6 py-4 text-center text-sm text-slate-600">
-                                                            {formatarData(
-                                                                candidato.data ||
-                                                                    candidato.data_candidatura ||
-                                                                    candidato.created_at
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-medium text-slate-700">
+                                                            {nomeDaVagaDoCandidato(
+                                                                candidato
                                                             )}
-                                                        </td>
+                                                        </span>
+                                                    </td>
 
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span
-                                                                className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${status.classe}`}
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-medium text-black">
+                                                            {candidato.email || "—"}
+                                                        </span>
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-medium text-black">
+                                                            {formatarTelefone(
+                                                                candidato.phone ||
+                                                                    candidato.telefone ||
+                                                                    candidato.whatsapp
+                                                            )}
+                                                        </span>
+                                                    </td>
+
+                                                    <td className="px-6 py-4 text-center text-sm text-slate-600">
+                                                        {formatarData(
+                                                            candidato.data ||
+                                                                candidato.data_candidatura ||
+                                                                candidato.created_at
+                                                        )}
+                                                    </td>
+
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span
+                                                            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${status.classe}`}
+                                                        >
+                                                            {status.texto}
+                                                        </span>
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex justify-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                title="Visualizar"
+                                                                className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
                                                             >
-                                                                {
-                                                                    status.texto
-                                                                }
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            }
-                                        )
+                                                                <Eye size={18} />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                title="Baixar"
+                                                                className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
+                                                            >
+                                                                <Download size={18} />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                title="Excluir"
+                                                                className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
                         </div>
 
-                        {!loadingCandidatos &&
-                            candidatos.length >
-                                0 && (
-                                <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
-                                    <span className="text-xs text-slate-500">
-                                        Mostrando{" "}
-                                        <strong className="text-slate-700">
-                                            {
-                                                primeiroCandidato +
-                                                1
-                                            }
-                                        </strong>{" "}
-                                        até{" "}
-                                        <strong className="text-slate-700">
-                                            {Math.min(
-                                                ultimoCandidato,
-                                                candidatos.length
-                                            )}
-                                        </strong>{" "}
-                                        de{" "}
-                                        <strong className="text-slate-700">
-                                            {
-                                                candidatos.length
-                                            }
-                                        </strong>
+                        {!loadingCandidatos && candidatos.length > 0 && (
+                            <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+                                <span className="text-xs text-slate-500">
+                                    Mostrando{" "}
+                                    <strong className="text-slate-700">
+                                        {primeiroCandidato + 1}
+                                    </strong>{" "}
+                                    até{" "}
+                                    <strong className="text-slate-700">
+                                        {Math.min(
+                                            ultimoCandidato,
+                                            candidatos.length
+                                        )}
+                                    </strong>{" "}
+                                    de{" "}
+                                    <strong className="text-slate-700">
+                                        {candidatos.length}
+                                    </strong>
+                                </span>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            irParaPagina(
+                                                paginaCandidatos - 1,
+                                                totalPaginasCandidatos,
+                                                setPaginaCandidatos
+                                            )
+                                        }
+                                        disabled={paginaCandidatos === 1}
+                                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
+                                    >
+                                        Anterior
+                                    </button>
+
+                                    <span className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-bold text-white">
+                                        {paginaCandidatos}
                                     </span>
 
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                irParaPagina(
-                                                    paginaCandidatos -
-                                                        1,
-                                                    totalPaginasCandidatos,
-                                                    setPaginaCandidatos
-                                                )
-                                            }
-                                            disabled={
-                                                paginaCandidatos ===
-                                                1
-                                            }
-                                            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
-                                        >
-                                            Anterior
-                                        </button>
-
-                                        <span className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-bold text-white">
-                                            {
-                                                paginaCandidatos
-                                            }
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                irParaPagina(
-                                                    paginaCandidatos +
-                                                        1,
-                                                    totalPaginasCandidatos,
-                                                    setPaginaCandidatos
-                                                )
-                                            }
-                                            disabled={
-                                                paginaCandidatos ===
-                                                totalPaginasCandidatos
-                                            }
-                                            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
-                                        >
-                                            Próxima
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            irParaPagina(
+                                                paginaCandidatos + 1,
+                                                totalPaginasCandidatos,
+                                                setPaginaCandidatos
+                                            )
+                                        }
+                                        disabled={
+                                            paginaCandidatos ===
+                                            totalPaginasCandidatos
+                                        }
+                                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:opacity-40"
+                                    >
+                                        Próxima
+                                    </button>
                                 </div>
-                            )}
+                            </div>
+                        )}
                     </section>
                 </div>
             </div>
