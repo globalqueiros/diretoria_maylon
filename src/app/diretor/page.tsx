@@ -1,5 +1,4 @@
 "use client";
-
 import {
     Users,
     Car,
@@ -14,6 +13,7 @@ import {
 import router from "next/router";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import TripsMap from "../components/TripsMap";
 
 interface Campanha {
     id: number;
@@ -360,7 +360,6 @@ export default function Page() {
                             : "Bem-vindo ao painel administrativo."}
                     </p>
                 </div>
-
                 <button
                     onClick={atualizarTudo}
                     className="flex cursor-pointer w-fit items-center gap-2 rounded-xl bg-[#00a99d] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00958b]"
@@ -656,8 +655,10 @@ export default function Page() {
                 </div>
             </section>
 
+            <TripsMap />
+
             <section>
-                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 mt-5">
                     <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                         <div className="border-b border-slate-100 p-5 sm:p-6">
                             <div className="flex items-center gap-3">

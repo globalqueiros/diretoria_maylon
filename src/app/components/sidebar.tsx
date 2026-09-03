@@ -158,7 +158,7 @@ const menuDiretor = [
   {
     name: "Auditoria",
     icon: FileText,
-    href: "/diretor/admin",
+    href: "/diretor/auditoria",
   },
 
   {
