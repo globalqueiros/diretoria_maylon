@@ -1,67 +1,144 @@
 "use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
-  FilePenLine,
-  HandCoins,
   Headset,
   LogOut,
-  ShieldCheck,
   Users,
   BriefcaseBusiness,
   ChevronDown,
   ChevronRight,
-  Settings,
   ChartNoAxesCombined,
   Scale,
   WalletMinimal,
   FileText,
   Percent,
-  User,
+  User as UserIcon,
   Trophy,
-  ArrowLeftRight,
+  ShoppingCart,
+  Home,
+  TriangleAlert,
+  Car,
+  MessageCircleMore,
+  PackageOpen,
+  Wallet,
+  LocateFixed,
+  Megaphone,
 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSlack } from "@fortawesome/free-brands-svg-icons";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+type IconComponent = React.ComponentType<{
+  size?: number;
+  className?: string;
+}>;
 
-const menuAtendente = [
+type MenuItem = {
+  name: string;
+  href?: string;
+  icon: IconComponent;
+  submenu?: {
+    name: string;
+    href: string;
+  }[];
+};
+
+type SupportItem = {
+  name: string;
+  type: "internal" | "external";
+  href: string;
+};
+
+type User = {
+  id: number;
+  full_name: string;
+  user_type: "atendente" | "diretor";
+};
+
+const isRouteActive = (pathname: string, href: string) => {
+  if (!href) return false;
+  if (pathname === href) return true;
+
+  const rootRoutes = ["/atendente", "/diretor"];
+
+  if (rootRoutes.includes(href)) return false;
+
+  return pathname.startsWith(`${href}/`);
+};
+
+const menuAtendente: MenuItem[] = [
   {
     name: "Dashboard",
-    icon: LayoutDashboard,
+    icon: Home,
     href: "/atendente",
   },
   {
-    name: "Clientes",
-    icon: Users,
-    href: "/atendente/clientes",
+    name: "Suporte e Ocorrências",
+    icon: TriangleAlert,
+    href: "/atendente/suporte_ocorrencias",
   },
   {
-    name: "Relatório",
-    icon: FilePenLine,
+    name: "Atendimento",
+    icon: MessageCircleMore,
+    href: "/atendente/atendimentos",
+  },
+  {
+    name: "Passageiros",
+    icon: Car,
+    href: "/atendente/passageiros",
+  },
+  {
+    name: "Motoristas",
+    icon: Car,
+    href: "/atendente/motoristas",
+  },
+  {
+    name: "Entregas",
+    icon: PackageOpen,
+    href: "/atendente/entregas",
+  },
+  {
+    name: "Corridas",
+    icon: LocateFixed,
+    href: "/atendente/corridas",
+  },
+  {
+    name: "Financeiro",
+    icon: Wallet,
+    href: "/atendente/financeiro",
+  },
+  {
+    name: "Relatórios",
+    icon: FileText,
     href: "/atendente/relatorio",
   },
   {
-    name: "Benefícios",
-    icon: HandCoins,
-    href: "/atendente/beneficios",
+    name: "Notificações",
+    icon: Megaphone,
+    href: "/atendente/notificacoes",
   },
   {
     name: "Sair",
     icon: LogOut,
-    href: "/saindo",
+    href: "/atendente/motoristas/saindo",
   },
 ];
 
-
-const menuDiretor = [
+const menuDiretor: MenuItem[] = [
   {
     name: "Dashboard",
     icon: LayoutDashboard,
     href: "/diretor",
   },
-
+  {
+    name: "Maylon Store",
+    icon: ShoppingCart,
+    href: "/diretor/maylon_store",
+  },
   {
     name: "Rifas",
     icon: Trophy,
@@ -72,7 +149,6 @@ const menuDiretor = [
     icon: BriefcaseBusiness,
     href: "/diretor/comercial",
   },
-
   {
     name: "Financeiro",
     icon: WalletMinimal,
@@ -93,7 +169,6 @@ const menuDiretor = [
     icon: Scale,
     href: "/diretor/juridico",
   },
-
   {
     name: "Relatórios",
     icon: ChartNoAxesCombined,
@@ -148,23 +223,20 @@ const menuDiretor = [
       },
     ],
   },
-
   {
-  name: "Transações",
-  icon: WalletMinimal,
-  href: "/diretor/transacoes",
+    name: "Transações",
+    icon: WalletMinimal,
+    href: "/diretor/transacoes",
   },
-
   {
     name: "Auditoria",
     icon: FileText,
     href: "/diretor/auditoria",
   },
-
   {
     name: "Perfil",
-    icon: User,
-    href: "/diretor/admin",
+    icon: UserIcon,
+    href: "/diretor/perfil",
   },
   {
     name: "Sair",
@@ -173,69 +245,105 @@ const menuDiretor = [
   },
 ];
 
-const supportItems = [
-  {
-    name: "Central de Ajuda",
-    icon: Headset,
-    href: "/central_ajuda",
-  },
-  {
-    name: "Slack",
-    icon: Headset,
-    href: "/central_ajuda",
-  },
-];
-
-type User = {
-  id: number;
-  full_name: string;
-  user_type: "atendente" | "diretor";
-};
-
 export default function Sidebar({
   collapsed,
 }: {
   collapsed: boolean;
 }) {
   const pathname = usePathname();
-  const [user, setUser] =
-    useState<User | null>(null);
-  const [openUsers, setOpenUsers] =
-    useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [openReports, setOpenReports] = useState(false);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await fetch("/api/me", {
+          method: "GET",
           credentials: "include",
+          cache: "no-store",
         });
-        if (!res.ok) return;
+
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+
         const data = await res.json();
-        setUser(data);
-      } catch (err) {
-        console.error(
-          "Erro ao buscar usuário"
-        );
+        const userData = data?.user ?? data;
+
+        if (
+          !userData ||
+          !["atendente", "diretor"].includes(
+            String(userData.user_type).toLowerCase()
+          )
+        ) {
+          setUser(null);
+          return;
+        }
+
+        setUser({
+          id: Number(userData.id),
+          full_name:
+            userData.full_name ??
+            userData.nome_completo ??
+            userData.nomeCompleto ??
+            userData.nome ??
+            userData.name ??
+            "Usuário",
+          user_type: String(
+            userData.user_type
+          ).toLowerCase() as "atendente" | "diretor",
+        });
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+        setUser(null);
       }
     };
+
     fetchUser();
   }, []);
 
-  if (!user) return null;
+  const isReportsPage = menuDiretor
+    .find((item) => item.name === "Relatórios")
+    ?.submenu?.some((subItem) =>
+      isRouteActive(pathname, subItem.href)
+    );
 
-  const isDiretor =
-    user.user_type === "diretor";
+  useEffect(() => {
+    if (isReportsPage) {
+      setOpenReports(true);
+    }
+  }, [isReportsPage]);
 
-  const menuItems = isDiretor
+  if (!user) {
+    return null;
+  }
+
+  const isDiretor = user.user_type === "diretor";
+  const menuItems: MenuItem[] = isDiretor
     ? menuDiretor
     : menuAtendente;
 
+  const supportItems: SupportItem[] = [
+    {
+      name: "Central de Ajuda",
+      type: "internal",
+      href: isDiretor
+        ? "/diretor/central_ajuda"
+        : "/atendente/central_ajuda",
+    },
+    {
+      name: "Slack",
+      type: "external",
+      href: "https://join.slack.com/t/maylon-grupo/shared_invite/zt-48i0334qf-M_LdsNNL3grr06FMJFpAkA",
+    },
+  ];
+
   return (
-    <div
-      className={`h-screen bg-white border-r border-gray-300 transition-all duration-300 overflow-y-auto
-      ${collapsed
-          ? "w-20"
-          : "w-64"
-        }`}
+    <aside
+      className={`h-screen bg-white border-r border-gray-300 transition-all duration-300 overflow-y-auto flex-shrink-0 ${
+        collapsed ? "w-20" : "w-64"
+      }`}
     >
       {collapsed ? (
         <div className="grid h-16 place-items-center border-b border-gray-200">
@@ -259,26 +367,39 @@ export default function Sidebar({
           />
         </div>
       )}
-      <div className="px-2 mt-4">
-        {menuItems.map((item: any, index) => {
-          const isActive =
-            pathname === item.href;
+
+      <nav className="px-2 mt-4">
+        {menuItems.map((item) => {
+          const isActive = isRouteActive(
+            pathname,
+            item.href ?? ""
+          );
+
           if (item.submenu) {
+            const hasActiveSubmenu = item.submenu.some(
+              (subItem) =>
+                isRouteActive(pathname, subItem.href)
+            );
+
+            const reportsOpen =
+              openReports || hasActiveSubmenu;
+
             return (
-              <div
-                key={index}
-                className="mb-1"
-              >
+              <div key={item.name} className="mb-1">
                 <button
+                  type="button"
                   onClick={() =>
-                    setOpenUsers(!openUsers)
+                    setOpenReports((previous) => !previous)
                   }
-                  className={`w-full cursor-pointer flex items-center ${collapsed ? "justify-center" : "justify-between"
-                    } p-3 rounded-lg transition
-                  ${openUsers
+                  className={`w-full cursor-pointer flex items-center ${
+                    collapsed
+                      ? "justify-center"
+                      : "justify-between"
+                  } p-3 rounded-lg transition ${
+                    hasActiveSubmenu
                       ? "bg-teal-500 text-white shadow-md"
                       : "hover:bg-gray-100 text-gray-700"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon size={20} />
@@ -288,57 +409,59 @@ export default function Sidebar({
                       </span>
                     )}
                   </div>
-                  {!collapsed && (
-                    <>
-                      {openUsers ? (
-                        <ChevronDown size={16} />
-                      ) : (
-                        <ChevronRight size={16} />
-                      )}
-                    </>
-                  )}
+                  {!collapsed &&
+                    (reportsOpen ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    ))}
                 </button>
-                {openUsers && !collapsed && (
+
+                {reportsOpen && !collapsed && (
                   <div className="ml-5 mt-1 flex flex-col gap-1">
-                    {item.submenu.map(
-                      (
-                        subItem: any,
-                        subIndex: number
-                      ) => {
-                        const isSubActive =
-                          pathname ===
-                          subItem.href;
-                        return (
-                          <Link
-                            key={subIndex}
-                            href={subItem.href}
-                            className={`px-3 py-2 rounded-lg text-xs transition                            
-                            ${isSubActive
-                                ? "bg-teal-100 text-teal-700 font-semibold"
-                                : "hover:bg-gray-100 text-gray-700"
-                              }
-                          `}
-                          >
-                            {subItem.name}
-                          </Link>
-                        );
-                      }
-                    )}
+                    {item.submenu.map((subItem) => {
+                      const isSubActive = isRouteActive(
+                        pathname,
+                        subItem.href
+                      );
+
+                      return (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          className={`px-3 py-2 rounded-lg text-xs transition ${
+                            isSubActive
+                              ? "bg-teal-100 text-teal-700 font-semibold"
+                              : "hover:bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {subItem.name}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             );
           }
+
+          if (!item.href) {
+            return null;
+          }
+
           return (
             <Link
-              key={index}
+              key={item.name}
               href={item.href}
-              className={`flex items-center ${collapsed ? "justify-center" : "justify-start"
-                } gap-3 p-3 rounded-lg transition mb-1
-                ${isActive
+              className={`flex items-center ${
+                collapsed
+                  ? "justify-center"
+                  : "justify-start"
+              } gap-3 p-3 rounded-lg transition mb-1 ${
+                isActive
                   ? "bg-teal-500 text-white shadow-md"
                   : "hover:bg-gray-100 text-gray-700"
-                }`}
+              }`}
             >
               <item.icon size={20} />
               {!collapsed && (
@@ -349,37 +472,66 @@ export default function Sidebar({
             </Link>
           );
         })}
-      </div>
+      </nav>
+
       <div className="px-2 mt-6">
         {!collapsed && (
           <p className="text-black font-semibold text-sm px-3 mb-2">
             Suporte
           </p>
         )}
-        {supportItems.map((item, index) => {
+
+        {supportItems.map((item) => {
           const isActive =
-            pathname === item.href;
+            item.type === "internal" &&
+            isRouteActive(pathname, item.href);
+
+          if (item.type === "internal") {
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center ${
+                  collapsed
+                    ? "justify-center"
+                    : "justify-start"
+                } gap-3 p-3 rounded-lg transition mb-1 ${
+                  isActive
+                    ? "bg-teal-500 text-white shadow-md"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                <Headset size={20} />
+                {!collapsed && (
+                  <span className="text-xs font-medium">
+                    {item.name}
+                  </span>
+                )}
+              </Link>
+            );
+          }
+
           return (
-            <Link
-              key={index}
+            <a
+              key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 p-3 rounded-lg transition              
-              ${isActive
-                  ? "bg-teal-500 text-white shadow-md"
-                  : "hover:bg-gray-100 text-gray-700"
-                }
-            `}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-start gap-3 p-3 rounded-lg transition mb-1 hover:bg-gray-100 text-gray-700"
             >
-              <item.icon size={20} />
+              <FontAwesomeIcon
+                icon={faSlack}
+                className="w-5 h-5"
+              />
               {!collapsed && (
                 <span className="text-xs font-medium">
                   {item.name}
                 </span>
               )}
-            </Link>
+            </a>
           );
         })}
       </div>
-    </div>
+    </aside>
   );
 }

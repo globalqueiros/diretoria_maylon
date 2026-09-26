@@ -16,9 +16,12 @@ interface User extends RowDataPacket {
   recruitment_status: string;
 }
 
+// Sessão: 2 horas e 30 minutos
+const SESSION_DURATION_SECONDS = 2 * 60 * 60 + 30 * 60;
+
 export async function POST(req: Request) {
   try {
-    // Recebe somente matrícula e senha
+    // Recebe matrícula e senha
     const body = await req.json();
 
     const matricula = String(body.matricula || "").trim();
@@ -40,7 +43,9 @@ export async function POST(req: Request) {
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
     if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
-      console.error("JWT_SECRET ou JWT_REFRESH_SECRET não configurado.");
+      console.error(
+        "JWT_SECRET ou JWT_REFRESH_SECRET não configurado."
+      );
 
       return NextResponse.json(
         {
@@ -51,7 +56,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Busca o usuário SOMENTE pela matrícula
+    // Busca o usuário pela matrícula
     const [rows] = await db.query<User[]>(
       `
       SELECT
@@ -138,7 +143,9 @@ export async function POST(req: Request) {
       passwordHash
     );
 
-    // Cria Access Token
+    // ==========================================
+    // ACCESS TOKEN - 2 HORAS E 30 MINUTOS
+    // ==========================================
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -146,18 +153,20 @@ export async function POST(req: Request) {
       },
       JWT_SECRET,
       {
-        expiresIn: "15m",
+        expiresIn: SESSION_DURATION_SECONDS,
       }
     );
 
-    // Cria Refresh Token
+    // ==========================================
+    // REFRESH TOKEN - 2 HORAS E 30 MINUTOS
+    // ==========================================
     const refreshToken = jwt.sign(
       {
         id: user.id,
       },
       JWT_REFRESH_SECRET,
       {
-        expiresIn: "7d",
+        expiresIn: SESSION_DURATION_SECONDS,
       }
     );
 
@@ -215,7 +224,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // Cookie Access Token
+    // ==========================================
+    // COOKIE ACCESS TOKEN - 2H30
+    // ==========================================
     response.cookies.set(
       "access_token",
       accessToken,
@@ -225,11 +236,13 @@ export async function POST(req: Request) {
           process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",
-        maxAge: 60 * 15,
+        maxAge: SESSION_DURATION_SECONDS,
       }
     );
 
-    // Cookie Refresh Token
+    // ==========================================
+    // COOKIE REFRESH TOKEN - 2H30
+    // ==========================================
     response.cookies.set(
       "refresh_token",
       refreshToken,
@@ -239,7 +252,7 @@ export async function POST(req: Request) {
           process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: SESSION_DURATION_SECONDS,
       }
     );
 

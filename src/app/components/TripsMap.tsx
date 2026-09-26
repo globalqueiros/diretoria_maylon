@@ -10,13 +10,10 @@ import {
 
 interface Trip {
   id: string | number;
-
   origin_lat: number | string | null;
   origin_lng: number | string | null;
-
   destination_lat: number | string | null;
   destination_lng: number | string | null;
-
   status?: string | null;
   service_type?: string | null;
 }
@@ -38,7 +35,9 @@ const mapContainerStyle = {
   height: "700px",
 };
 
-function normalizarTexto(valor?: string | null) {
+function normalizarTexto(
+  valor?: string | null
+): string {
   return (valor || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -46,10 +45,11 @@ function normalizarTexto(valor?: string | null) {
     .toLowerCase();
 }
 
-function obterCorRota(serviceType?: string | null) {
+function obterCorRota(
+  serviceType?: string | null
+): string {
   const tipo = normalizarTexto(serviceType);
 
-  // Hospital / Ambulância
   if (
     tipo === "hospital" ||
     tipo === "ambulancia" ||
@@ -60,7 +60,6 @@ function obterCorRota(serviceType?: string | null) {
     return "#dc2626";
   }
 
-  // Polícia
   if (
     tipo === "policia" ||
     tipo === "policiamento" ||
@@ -69,7 +68,6 @@ function obterCorRota(serviceType?: string | null) {
     return "#2563eb";
   }
 
-  // Bombeiros
   if (
     tipo === "bombeiro" ||
     tipo === "bombeiros" ||
@@ -78,11 +76,12 @@ function obterCorRota(serviceType?: string | null) {
     return "#f97316";
   }
 
-  // Viagem normal
   return "#35a989";
 }
 
-function obterNomeServico(serviceType?: string | null) {
+function obterNomeServico(
+  serviceType?: string | null
+): string {
   const tipo = normalizarTexto(serviceType);
 
   if (
@@ -109,7 +108,8 @@ export default function TripsMap() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [lastUpdate, setLastUpdate] =
+    useState<Date | null>(null);
 
   const googleMapsApiKey =
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -118,20 +118,17 @@ export default function TripsMap() {
     googleMapsApiKey,
   });
 
-  /**
-   * Busca as viagens
-   */
   useEffect(() => {
     let ativo = true;
 
     async function carregarViagens() {
       try {
-        if (!ativo) return;
+        if (!ativo) {
+          return;
+        }
 
         setLoading(true);
         setError("");
-
-        console.log("Buscando viagens em /api/trips/map...");
 
         const response = await fetch("/api/trips/map", {
           method: "GET",
@@ -142,21 +139,7 @@ export default function TripsMap() {
           },
         });
 
-        /**
-         * Lemos como texto primeiro.
-         *
-         * Isso evita outro erro caso a API retorne:
-         * - HTML
-         * - resposta vazia
-         * - erro do Next.js
-         * - JSON inválido
-         */
         const texto = await response.text();
-
-        console.log("API /api/trips/map");
-        console.log("Status:", response.status);
-        console.log("OK:", response.ok);
-        console.log("Resposta:", texto);
 
         let data: ApiResponse | Trip[] | null = null;
 
@@ -170,14 +153,11 @@ export default function TripsMap() {
             );
 
             throw new Error(
-              `A API retornou uma resposta inválida (HTTP ${response.status}).`
+              `A API retornou uma resposta inválida. Status HTTP: ${response.status}.`
             );
           }
         }
 
-        /**
-         * Se a API retornar erro HTTP
-         */
         if (!response.ok) {
           let mensagem = `Erro HTTP ${response.status}`;
 
@@ -195,24 +175,6 @@ export default function TripsMap() {
           throw new Error(mensagem);
         }
 
-        /**
-         * Normaliza os diferentes formatos possíveis
-         *
-         * Formato 1:
-         * [
-         *   {...}
-         * ]
-         *
-         * Formato 2:
-         * {
-         *   trips: [...]
-         * }
-         *
-         * Formato 3:
-         * {
-         *   data: [...]
-         * }
-         */
         let lista: Trip[] = [];
 
         if (Array.isArray(data)) {
@@ -230,19 +192,11 @@ export default function TripsMap() {
         ) {
           lista = data.data;
         } else {
-          console.error(
-            "Formato inesperado retornado pela API:",
-            data
-          );
-
           throw new Error(
             "A API de viagens não retornou uma lista válida."
           );
         }
 
-        /**
-         * Filtra somente viagens com ID.
-         */
         const viagensValidas = lista.filter(
           (trip) =>
             trip &&
@@ -250,29 +204,22 @@ export default function TripsMap() {
             trip.id !== null
         );
 
-        console.log(
-          "Viagens recebidas:",
-          viagensValidas
-        );
-
-        if (!ativo) return;
+        if (!ativo) {
+          return;
+        }
 
         setTrips(viagensValidas);
         setLastUpdate(new Date());
         setError("");
       } catch (err: unknown) {
         console.error(
-          "===================================="
-        );
-        console.error(
-          "ERRO AO CARREGAR VIAGENS"
-        );
-        console.error(err);
-        console.error(
-          "===================================="
+          "Erro ao carregar viagens:",
+          err
         );
 
-        if (!ativo) return;
+        if (!ativo) {
+          return;
+        }
 
         const mensagem =
           err instanceof Error
@@ -295,19 +242,14 @@ export default function TripsMap() {
     };
   }, []);
 
-  /**
-   * Converte viagens para coordenadas válidas.
-   */
   const viagensComCoordenadas = useMemo(() => {
     return trips
       .map((trip) => {
         const originLat = Number(trip.origin_lat);
         const originLng = Number(trip.origin_lng);
-
         const destinationLat = Number(
           trip.destination_lat
         );
-
         const destinationLng = Number(
           trip.destination_lng
         );
@@ -347,9 +289,24 @@ export default function TripsMap() {
       );
   }, [trips]);
 
-  /**
-   * Erro ao carregar Google Maps
-   */
+  if (!googleMapsApiKey) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
+        <div className="font-semibold">
+          Google Maps não configurado
+        </div>
+
+        <p className="mt-1 text-sm">
+          A variável{" "}
+          <code className="mx-1 rounded bg-amber-100 px-1">
+            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+          </code>{" "}
+          não foi encontrada.
+        </p>
+      </div>
+    );
+  }
+
   if (loadError) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
@@ -358,7 +315,8 @@ export default function TripsMap() {
         </div>
 
         <div className="mt-1 text-sm">
-          Verifique a variável:
+          Verifique a chave da API e as APIs habilitadas
+          no Google Cloud.
         </div>
 
         <code className="mt-2 block rounded-lg bg-red-100 p-2 text-xs">
@@ -368,30 +326,6 @@ export default function TripsMap() {
     );
   }
 
-  /**
-   * Chave do Google Maps ausente
-   */
-  if (!googleMapsApiKey) {
-    return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
-        <div className="font-semibold">
-          Google Maps não configurado
-        </div>
-
-        <p className="mt-1 text-sm">
-          A variável
-          <code className="mx-1 rounded bg-amber-100 px-1">
-            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-          </code>
-          não foi encontrada.
-        </p>
-      </div>
-    );
-  }
-
-  /**
-   * Carregando Google Maps
-   */
   if (!isLoaded) {
     return (
       <div className="flex h-[700px] items-center justify-center rounded-2xl border border-gray-200 bg-gray-50">
@@ -408,11 +342,6 @@ export default function TripsMap() {
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-
-      {/* ========================================= */}
-      {/* INFORMAÇÕES */}
-      {/* ========================================= */}
-
       <div className="absolute left-4 top-4 z-10 min-w-[145px] rounded-xl bg-white px-4 py-3 shadow-lg">
         <div className="text-sm font-bold text-gray-900">
           Mapa de viagens
@@ -437,10 +366,6 @@ export default function TripsMap() {
         )}
       </div>
 
-      {/* ========================================= */}
-      {/* ERRO DA API */}
-      {/* ========================================= */}
-
       {error && (
         <div className="absolute right-4 top-4 z-20 max-w-[360px] rounded-xl border border-red-200 bg-red-50 px-4 py-3 shadow-lg">
           <div className="flex items-start gap-3">
@@ -461,24 +386,16 @@ export default function TripsMap() {
         </div>
       )}
 
-      {/* ========================================= */}
-      {/* LEGENDA */}
-      {/* ========================================= */}
-
       <div className="absolute bottom-5 left-4 z-10 rounded-xl bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
         <div className="mb-2 text-xs font-bold text-gray-700">
           Tipos de viagem
         </div>
 
         <div className="space-y-1.5">
-
-          {/* Normal */}
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{
-                backgroundColor: "#35a989",
-              }}
+              style={{ backgroundColor: "#35a989" }}
             />
 
             <span className="text-xs text-gray-600">
@@ -486,13 +403,10 @@ export default function TripsMap() {
             </span>
           </div>
 
-          {/* Hospital */}
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{
-                backgroundColor: "#dc2626",
-              }}
+              style={{ backgroundColor: "#dc2626" }}
             />
 
             <span className="text-xs text-gray-600">
@@ -500,13 +414,10 @@ export default function TripsMap() {
             </span>
           </div>
 
-          {/* Polícia */}
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{
-                backgroundColor: "#2563eb",
-              }}
+              style={{ backgroundColor: "#2563eb" }}
             />
 
             <span className="text-xs text-gray-600">
@@ -514,26 +425,18 @@ export default function TripsMap() {
             </span>
           </div>
 
-          {/* Bombeiros */}
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{
-                backgroundColor: "#f97316",
-              }}
+              style={{ backgroundColor: "#f97316" }}
             />
 
             <span className="text-xs text-gray-600">
               Bombeiros
             </span>
           </div>
-
         </div>
       </div>
-
-      {/* ========================================= */}
-      {/* ATUALIZAÇÃO */}
-      {/* ========================================= */}
 
       {lastUpdate && (
         <div className="absolute bottom-5 right-4 z-10 rounded-lg bg-white/95 px-3 py-2 text-[10px] text-gray-400 shadow backdrop-blur">
@@ -544,10 +447,6 @@ export default function TripsMap() {
           })}
         </div>
       )}
-
-      {/* ========================================= */}
-      {/* GOOGLE MAPS */}
-      {/* ========================================= */}
 
       <GoogleMap
         center={center}
@@ -591,11 +490,6 @@ export default function TripsMap() {
 
             return (
               <Fragment key={String(trip.id)}>
-
-                {/* ================================= */}
-                {/* MARCADOR DE ORIGEM */}
-                {/* ================================= */}
-
                 <Marker
                   position={{
                     lat: originLat,
@@ -608,10 +502,6 @@ export default function TripsMap() {
                     fontWeight: "bold",
                   }}
                 />
-
-                {/* ================================= */}
-                {/* MARCADOR DE DESTINO */}
-                {/* ================================= */}
 
                 <Marker
                   position={{
@@ -626,10 +516,6 @@ export default function TripsMap() {
                   }}
                 />
 
-                {/* ================================= */}
-                {/* LINHA DA VIAGEM */}
-                {/* ================================= */}
-
                 <Polyline
                   path={path}
                   options={{
@@ -640,6 +526,14 @@ export default function TripsMap() {
                   }}
                 />
 
+                <Marker
+                  position={{
+                    lat: originLat,
+                    lng: originLng,
+                  }}
+                  title={`${nomeServico} - Viagem ${trip.id}`}
+                  visible={false}
+                />
               </Fragment>
             );
           }

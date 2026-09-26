@@ -183,7 +183,7 @@ export default function ComercialPage() {
             const matchesStatus =
                 leadStatus === "Todos" || lead.status === leadStatus;
 
-            const query = search.toLowerCase();
+            const query = search.toLowerCase().trim();
 
             const matchesSearch =
                 lead.name.toLowerCase().includes(query) ||
@@ -218,7 +218,11 @@ export default function ComercialPage() {
 
         const csv = [
             headers.join(";"),
-            ...rows.map((row) => row.join(";")),
+            ...rows.map((row) =>
+                row
+                    .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+                    .join(";")
+            ),
         ].join("\n");
 
         const blob = new Blob(["\ufeff" + csv], {
@@ -245,6 +249,7 @@ export default function ComercialPage() {
                     <h1 className="text-[30px] font-extrabold tracking-tight">
                         Comercial & Marketing
                     </h1>
+
                     <p className="text-sm text-white/95">
                         Acompanhe vendas, leads, campanhas e resultados comerciais.
                     </p>
@@ -307,6 +312,7 @@ export default function ComercialPage() {
                         <h2 className="text-[18px] font-bold text-[#192c48]">
                             Desempenho comercial
                         </h2>
+
                         <p className="text-[13px] text-[#5f7391]">
                             Visão geral dos principais indicadores comerciais.
                         </p>
@@ -397,6 +403,7 @@ export default function ComercialPage() {
                             <h2 className="text-[18px] font-bold text-[#192c48]">
                                 Funil comercial
                             </h2>
+
                             <p className="text-[13px] text-[#5f7391]">
                                 Acompanhe a evolução dos seus leads.
                             </p>
@@ -410,24 +417,28 @@ export default function ComercialPage() {
                             percentage={100}
                             color="bg-[#1264e8]"
                         />
+
                         <FunnelRow
                             label="Em contato"
                             value={318}
                             percentage={51}
                             color="bg-[#3783ee]"
                         />
+
                         <FunnelRow
                             label="Qualificados"
                             value={176}
                             percentage={28}
                             color="bg-[#7651d8]"
                         />
+
                         <FunnelRow
                             label="Propostas"
                             value={91}
                             percentage={15}
                             color="bg-[#9a7be7]"
                         />
+
                         <FunnelRow
                             label="Convertidos"
                             value={128}
@@ -447,6 +458,7 @@ export default function ComercialPage() {
                             <h2 className="text-[18px] font-bold text-[#192c48]">
                                 Desempenho por canal
                             </h2>
+
                             <p className="text-[13px] text-[#5f7391]">
                                 Veja de onde estão vindo seus leads.
                             </p>
@@ -461,6 +473,7 @@ export default function ComercialPage() {
                             percentage={84}
                             color="bg-[#e1306c]"
                         />
+
                         <ChannelRow
                             name="Google"
                             leads={186}
@@ -468,6 +481,7 @@ export default function ComercialPage() {
                             percentage={76}
                             color="bg-[#4285f4]"
                         />
+
                         <ChannelRow
                             name="Facebook"
                             leads={128}
@@ -475,6 +489,7 @@ export default function ComercialPage() {
                             percentage={61}
                             color="bg-[#1877f2]"
                         />
+
                         <ChannelRow
                             name="Indicação"
                             leads={72}
@@ -482,6 +497,7 @@ export default function ComercialPage() {
                             percentage={48}
                             color="bg-[#00a681]"
                         />
+
                         <ChannelRow
                             name="Site"
                             leads={28}
@@ -503,6 +519,7 @@ export default function ComercialPage() {
                         <h2 className="text-[18px] font-bold text-[#192c48]">
                             Campanhas de marketing
                         </h2>
+
                         <p className="text-[13px] text-[#5f7391]">
                             Acompanhe investimento e resultados das campanhas.
                         </p>
@@ -531,7 +548,10 @@ export default function ComercialPage() {
 
                         <tbody>
                             {campaigns.map((campaign) => (
-                                <tr key={campaign.id} className="transition hover:bg-[#fafcfd]">
+                                <tr
+                                    key={campaign.id}
+                                    className="transition hover:bg-[#fafcfd]"
+                                >
                                     <TableCell className="font-semibold text-[#637893]">
                                         {campaign.id}
                                     </TableCell>
@@ -541,8 +561,14 @@ export default function ComercialPage() {
                                     </TableCell>
 
                                     <TableCell>{campaign.channel}</TableCell>
-                                    <TableCell>{money.format(campaign.budget)}</TableCell>
-                                    <TableCell>{money.format(campaign.spent)}</TableCell>
+
+                                    <TableCell>
+                                        {money.format(campaign.budget)}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {money.format(campaign.spent)}
+                                    </TableCell>
 
                                     <TableCell>
                                         <span className="font-bold text-[#1264e8]">
@@ -598,6 +624,7 @@ export default function ComercialPage() {
                         <h2 className="text-[18px] font-bold text-[#192c48]">
                             Leads recentes
                         </h2>
+
                         <p className="text-[13px] text-[#5f7391]">
                             Novos contatos e oportunidades comerciais.
                         </p>
@@ -679,7 +706,10 @@ export default function ComercialPage() {
                         <tbody>
                             {filteredLeads.length > 0 ? (
                                 filteredLeads.map((lead) => (
-                                    <tr key={lead.id} className="transition hover:bg-[#fafcfd]">
+                                    <tr
+                                        key={lead.id}
+                                        className="transition hover:bg-[#fafcfd]"
+                                    >
                                         <TableCell className="font-semibold text-[#637893]">
                                             {lead.id}
                                         </TableCell>
@@ -689,7 +719,9 @@ export default function ComercialPage() {
                                         </TableCell>
 
                                         <TableCell>{lead.email}</TableCell>
+
                                         <TableCell>{lead.phone}</TableCell>
+
                                         <TableCell>{lead.source}</TableCell>
 
                                         <TableCell>
@@ -773,8 +805,9 @@ function MetricCard({
                 </strong>
 
                 <span
-                    className={`mt-1 flex items-center gap-1 text-[11px] ${positive ? "text-[#00a681]" : "text-[#e23b3b]"
-                        }`}
+                    className={`mt-1 flex items-center gap-1 text-[11px] ${
+                        positive ? "text-[#00a681]" : "text-[#e23b3b]"
+                    }`}
                 >
                     {positive ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
                     {description}
@@ -836,7 +869,9 @@ function FunnelRow({
     return (
         <div>
             <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium text-[#526986]">{label}</span>
+                <span className="text-xs font-medium text-[#526986]">
+                    {label}
+                </span>
 
                 <span className="text-xs font-bold text-[#263d5a]">
                     {number.format(value)}
@@ -893,7 +928,7 @@ function ChannelRow({
 }
 
 function CampaignStatus({ status }: { status: CampaignStatus }) {
-    const styles = {
+    const styles: Record<CampaignStatus, string> = {
         Ativa: "bg-[#e1f8ee] text-[#078d6d]",
         Pausada: "bg-[#fff0cd] text-[#a26b00]",
         Finalizada: "bg-[#edf1f5] text-[#687c96]",
@@ -909,7 +944,7 @@ function CampaignStatus({ status }: { status: CampaignStatus }) {
 }
 
 function LeadStatusBadge({ status }: { status: LeadStatus }) {
-    const styles = {
+    const styles: Record<LeadStatus, string> = {
         Novo: "bg-[#dce9ff] text-[#1264e8]",
         Contato: "bg-[#fff0cd] text-[#a26b00]",
         Qualificado: "bg-[#e9e1ff] text-[#7651d8]",
@@ -939,7 +974,7 @@ function TableCell({
 }: {
     children: React.ReactNode;
     className?: string;
-}) {L
+}) {
     return (
         <td
             className={`border-b border-[#edf1f5] px-[17px] py-[15px] text-xs text-[#526986] ${className}`}

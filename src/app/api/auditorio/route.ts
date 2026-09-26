@@ -1,24 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "../../lib/db";
 
-// =============================================================
-// GET - LISTAR PATRIMÔNIOS
-// =============================================================
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-
     const busca = searchParams.get("busca")?.trim() || "";
     const status = searchParams.get("status") || "";
     const categoria = searchParams.get("categoria") || "";
 
     const conditions: string[] = [];
     const params: string[] = [];
-
-    // =========================================================
-    // BUSCA
-    // =========================================================
 
     if (busca) {
       conditions.push(`
@@ -33,20 +24,8 @@ export async function GET(request: Request) {
       `);
 
       const termo = `%${busca}%`;
-
-      params.push(
-        termo,
-        termo,
-        termo,
-        termo,
-        termo,
-        termo
-      );
+      params.push(termo, termo, termo, termo, termo, termo);
     }
-
-    // =========================================================
-    // STATUS
-    // =========================================================
 
     if (
       status === "Auditado" ||
@@ -57,50 +36,38 @@ export async function GET(request: Request) {
       params.push(status);
     }
 
-    // =========================================================
-    // CATEGORIA
-    // =========================================================
-
     if (categoria && categoria !== "Todas") {
       conditions.push("categoria = ?");
       params.push(categoria);
     }
-
-    // =========================================================
-    // WHERE
-    // =========================================================
 
     const where =
       conditions.length > 0
         ? `WHERE ${conditions.join(" AND ")}`
         : "";
 
-    // =========================================================
-    // CONSULTA
-    // =========================================================
-
     const [patrimonios] = await db.query(
       `
-      SELECT
-        id,
-        codigo,
-        n_patrimonio,
-        nomeitem,
-        categoria,
-        valor_aquisicao,
-        comprovantepagamento,
-        nfe,
-        localizacao,
-        responsavel,
-        datacompra,
-        status,
-        descricao,
-        observacao,
-        created_at,
-        updated_at
-      FROM patrimonio
-      ${where}
-      ORDER BY id DESC
+        SELECT
+          id,
+          codigo,
+          n_patrimonio,
+          nomeitem,
+          categoria,
+          valor_aquisicao,
+          comprovantepagamento,
+          nfe,
+          localizacao,
+          responsavel,
+          datacompra,
+          status,
+          descricao,
+          observacao,
+          created_at,
+          updated_at
+        FROM patrimonio
+        ${where}
+        ORDER BY id DESC
       `,
       params
     );
@@ -110,212 +77,253 @@ export async function GET(request: Request) {
       data: patrimonios,
     });
   } catch (error) {
-    console.error(
-      "GET /api/auditorio:",
-      error
-    );
+    console.error("GET /api/auditorio:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Erro ao buscar patrimônios.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
 
-// =============================================================
-// POST - CADASTRAR PATRIMÔNIO
-// =============================================================
-
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") || "";
 
-    const {
-      codigo,
-      n_patrimonio,
-      nomeitem,
-      categoria,
-      valor_aquisicao,
-      comprovantepagamento,
-      nfe,
-      localizacao,
-      responsavel,
-      datacompra,
-      status,
-      descricao,
-      observacao,
-    } = body;
+    if (!contentType.toLowerCase().includes("application/json")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "A requisição deve ser enviada como JSON.",
+          contentType,
+        },
+        { status: 415 }
+      );
+    }
 
-    // =========================================================
-    // VALIDAÇÕES
-    // =========================================================
+    let body: any;
 
-    if (!codigo?.trim()) {
+    try {
+      body = await request.json();
+    } catch (error) {
+      console.error("JSON inválido recebido em /api/auditorio:", error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "O corpo da requisição contém JSON inválido.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Os dados enviados são inválidos.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const codigo =
+      typeof body.codigo === "string"
+        ? body.codigo.trim()
+        : "";
+
+    const n_patrimonio =
+      typeof body.n_patrimonio === "string"
+        ? body.n_patrimonio.trim()
+        : "";
+
+    const nomeitem =
+      typeof body.nomeitem === "string"
+        ? body.nomeitem.trim()
+        : "";
+
+    const categoria =
+      typeof body.categoria === "string"
+        ? body.categoria.trim()
+        : "";
+
+    const localizacao =
+      typeof body.localizacao === "string"
+        ? body.localizacao.trim()
+        : "";
+
+    const responsavel =
+      typeof body.responsavel === "string"
+        ? body.responsavel.trim()
+        : "";
+
+    const descricao =
+      typeof body.descricao === "string"
+        ? body.descricao.trim()
+        : "";
+
+    const observacao =
+      typeof body.observacao === "string"
+        ? body.observacao.trim()
+        : "";
+
+    const comprovantepagamento =
+      typeof body.comprovantepagamento === "string"
+        ? body.comprovantepagamento.trim()
+        : null;
+
+    const nfe =
+      typeof body.nfe === "string"
+        ? body.nfe.trim()
+        : null;
+
+    const datacompra =
+      typeof body.datacompra === "string"
+        ? body.datacompra.trim()
+        : null;
+
+    const status =
+      typeof body.status === "string" &&
+      body.status.trim()
+        ? body.status.trim()
+        : "Pendente";
+
+    if (!codigo) {
       return NextResponse.json(
         {
           success: false,
           error: "O código é obrigatório.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    if (!n_patrimonio?.trim()) {
+    if (!n_patrimonio) {
       return NextResponse.json(
         {
           success: false,
           error:
             "O número do patrimônio é obrigatório. Faça a leitura do código de barras.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    if (!nomeitem?.trim()) {
+    if (!nomeitem) {
       return NextResponse.json(
         {
           success: false,
           error: "O nome do item é obrigatório.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    if (!descricao?.trim()) {
+    if (!descricao) {
       return NextResponse.json(
         {
           success: false,
           error: "A descrição é obrigatória.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    if (!categoria?.trim()) {
+    if (!categoria) {
       return NextResponse.json(
         {
           success: false,
           error: "A categoria é obrigatória.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    if (!localizacao?.trim()) {
+    if (!localizacao) {
       return NextResponse.json(
         {
           success: false,
           error: "A localização é obrigatória.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    // =========================================================
-    // CONVERTER VALOR
-    // =========================================================
-
     let valor = 0;
 
+    const valorRecebido = body.valor_aquisicao;
+
     if (
-      valor_aquisicao !== null &&
-      valor_aquisicao !== undefined &&
-      valor_aquisicao !== ""
+      valorRecebido !== null &&
+      valorRecebido !== undefined &&
+      valorRecebido !== ""
     ) {
-      if (typeof valor_aquisicao === "string") {
-        valor = Number(
-          valor_aquisicao
-            .replace("R$", "")
-            .replace(/\s/g, "")
-            .replace(/\./g, "")
-            .replace(",", ".")
-        );
-      } else {
-        valor = Number(valor_aquisicao);
+      if (typeof valorRecebido === "number") {
+        valor = valorRecebido;
+      } else if (typeof valorRecebido === "string") {
+        const valorLimpo = valorRecebido
+          .replace(/R\$/gi, "")
+          .replace(/\s/g, "")
+          .replace(/\./g, "")
+          .replace(",", ".");
+
+        valor = Number(valorLimpo);
       }
     }
 
-    if (Number.isNaN(valor)) {
+    if (!Number.isFinite(valor) || valor < 0) {
       valor = 0;
     }
 
-    // =========================================================
-    // INSERT
-    // =========================================================
-
     const [result] = await db.execute(
       `
-      INSERT INTO patrimonio (
+        INSERT INTO patrimonio (
+          codigo,
+          n_patrimonio,
+          nomeitem,
+          categoria,
+          valor_aquisicao,
+          comprovantepagamento,
+          nfe,
+          localizacao,
+          responsavel,
+          datacompra,
+          status,
+          descricao,
+          observacao
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
         codigo,
         n_patrimonio,
         nomeitem,
         categoria,
-        valor_aquisicao,
+        valor,
         comprovantepagamento,
         nfe,
         localizacao,
-        responsavel,
-        datacompra,
+        responsavel || null,
+        datacompra || null,
         status,
         descricao,
-        observacao
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        codigo.trim(),
-        n_patrimonio.trim(),
-        nomeitem.trim(),
-        categoria.trim(),
-        valor,
-        comprovantepagamento || null,
-        nfe || null,
-        localizacao.trim(),
-        responsavel?.trim() || null,
-        datacompra || null,
-        status || "Pendente",
-        descricao.trim(),
-        observacao?.trim() || null,
+        observacao || null,
       ]
     );
 
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Patrimônio cadastrado com sucesso.",
+        message: "Patrimônio cadastrado com sucesso.",
         id: (result as any).insertId,
       },
-      {
-        status: 201,
-      }
+      { status: 201 }
     );
   } catch (error: any) {
-    console.error(
-      "POST /api/auditorio:",
-      error
-    );
-
-    // =========================================================
-    // DUPLICIDADE
-    // =========================================================
+    console.error("POST /api/auditorio:", error);
 
     if (error?.code === "ER_DUP_ENTRY") {
       return NextResponse.json(
@@ -324,15 +332,9 @@ export async function POST(request: Request) {
           error:
             "O código ou número do patrimônio já está cadastrado.",
         },
-        {
-          status: 409,
-        }
+        { status: 409 }
       );
     }
-
-    // =========================================================
-    // ERRO DO MYSQL
-    // =========================================================
 
     return NextResponse.json(
       {
@@ -343,9 +345,7 @@ export async function POST(request: Request) {
           "Erro ao cadastrar patrimônio.",
         code: error?.code || null,
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

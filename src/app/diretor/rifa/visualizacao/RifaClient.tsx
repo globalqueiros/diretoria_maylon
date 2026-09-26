@@ -185,8 +185,8 @@ export default function RifaClient({
       if (!response.ok) {
         mostrarAlerta(
           data?.mensagem ||
-            data?.message ||
-            "Erro ao adicionar números.",
+          data?.message ||
+          "Erro ao adicionar números.",
           "error"
         );
         return;
@@ -197,8 +197,8 @@ export default function RifaClient({
 
       mostrarAlerta(
         data?.mensagem ||
-          data?.message ||
-          "Números adicionados com sucesso!",
+        data?.message ||
+        "Números adicionados com sucesso!",
         "success"
       );
 
@@ -284,8 +284,8 @@ export default function RifaClient({
       if (!response.ok) {
         mostrarAlerta(
           data?.mensagem ||
-            data?.message ||
-            "Não foi possível realizar o sorteio.",
+          data?.message ||
+          "Não foi possível realizar o sorteio.",
           "error"
         );
         return;
@@ -369,19 +369,52 @@ export default function RifaClient({
     setQuantidadeNumeros("");
   }
 
+  function enviarPagamentoWhatsApp() {
+    if (numeroSelecionado === null) {
+      mostrarAlerta("Selecione um número primeiro.", "error");
+      return;
+    }
+
+    const numeroFormatado = formatarNumero(numeroSelecionado);
+
+    // Troque esta URL pela URL da sua página de pagamento
+    const linkPagamento = `${window.location.origin}/pagamento/rifa/${rifa.id}?numero=${numeroSelecionado}`;
+
+    const valor = dinheiro(rifa.valor_numero);
+
+    const mensagem = `Olá! 👋
+
+    Quero participar da rifa *${rifa.titulo}*.
+
+    🎟️ Número: *${numeroFormatado}*
+    💰 Valor: *${valor}*
+
+    Para realizar o pagamento, acesse:
+    ${linkPagamento}`;
+
+    const mensagemWhatsApp = encodeURIComponent(mensagem);
+
+    // Abre o WhatsApp
+    window.open(
+      `https://wa.me/?text=${mensagemWhatsApp}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+
   return (
     <>
-      <div className="mx-auto w-full max-w-[1400px] px-4 pb-10 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1600px] px-4 pb-10 sm:px-6 lg:px-8">
 
         {/* ALERTA */}
         {alert && (
           <div
             role="alert"
-            className={`fixed right-5 top-5 z-[300] flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-xl ${
-              alertTipo === "success"
-                ? "bg-emerald-500"
-                : "bg-red-500"
-            }`}
+            className={`fixed right-5 top-5 z-[300] flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-xl ${alertTipo === "success"
+              ? "bg-emerald-500"
+              : "bg-red-500"
+              }`}
           >
             <span className="text-lg">
               {alertTipo === "success" ? "✓" : "!"}
@@ -416,7 +449,6 @@ export default function RifaClient({
 
             <div className="flex flex-wrap items-center gap-3">
 
-              {/* BOTÃO VOLTAR */}
               <button
                 type="button"
                 onClick={() => router.back()}
@@ -432,7 +464,6 @@ export default function RifaClient({
                 <span>Voltar</span>
               </button>
 
-              {/* BOTÃO SORTEAR */}
               <button
                 type="button"
                 onClick={abrirModalSorteio}
@@ -472,13 +503,12 @@ export default function RifaClient({
                 <div className="min-w-0">
 
                   <span
-                    className={`inline-flex w-fit rounded-lg px-3 py-1 text-xs font-semibold ${
-                      rifa.status === "aberta"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : rifa.status === "encerrada"
-                          ? "bg-orange-50 text-orange-700"
-                          : "bg-blue-50 text-blue-700"
-                    }`}
+                    className={`inline-flex w-fit rounded-lg px-3 py-1 text-xs font-semibold ${rifa.status === "aberta"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : rifa.status === "encerrada"
+                        ? "bg-orange-50 text-orange-700"
+                        : "bg-blue-50 text-blue-700"
+                      }`}
                   >
                     {rifa.status === "aberta"
                       ? "Rifa aberta"
@@ -718,11 +748,10 @@ export default function RifaClient({
                     return (
                       <tr
                         key={item.id}
-                        className={`transition ${
-                          selecionado
-                            ? "bg-indigo-50"
-                            : "hover:bg-slate-50"
-                        }`}
+                        className={`transition ${selecionado
+                          ? "bg-indigo-50"
+                          : "hover:bg-slate-50"
+                          }`}
                       >
 
                         <td className="px-5 py-3">
@@ -790,12 +819,11 @@ export default function RifaClient({
                                 selecionarNumero(item.numero);
                               }
                             }}
-                            className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${
-                              disponivel &&
+                            className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${disponivel &&
                               rifa.status === "aberta"
-                                ? "cursor-pointer bg-teal-600 text-white hover:bg-teal-700"
-                                : "cursor-not-allowed bg-slate-100 text-slate-400"
-                            }`}
+                              ? "cursor-pointer bg-teal-600 text-white hover:bg-teal-700"
+                              : "cursor-not-allowed bg-slate-100 text-slate-400"
+                              }`}
                           >
                             {selecionado
                               ? "Selecionado"
@@ -865,11 +893,10 @@ export default function RifaClient({
                       key={i}
                       type="button"
                       onClick={() => setPagina(i + 1)}
-                      className={`h-9 min-w-9 cursor-pointer rounded-lg px-3 text-sm font-medium ${
-                        pagina === i + 1
-                          ? "bg-teal-600 text-white"
-                          : "border border-slate-300 text-slate-700 hover:bg-teal-50"
-                      }`}
+                      className={`h-9 min-w-9 cursor-pointer rounded-lg px-3 text-sm font-medium ${pagina === i + 1
+                        ? "bg-teal-600 text-white"
+                        : "border border-slate-300 text-slate-700 hover:bg-teal-50"
+                        }`}
                     >
                       {i + 1}
                     </button>
@@ -924,18 +951,13 @@ export default function RifaClient({
 
                 <button
                   type="button"
-                  onClick={() => {
-                    mostrarAlerta(
-                      `Número ${formatarNumero(
-                        numeroSelecionado
-                      )} selecionado.`,
-                      "success"
-                    );
-                  }}
-                  className="cursor-pointer rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700"
+                  onClick={enviarPagamentoWhatsApp}
+                  disabled={numeroSelecionado === null}
+                  className="cursor-pointer rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continuar
                 </button>
+
 
               </div>
 
@@ -956,7 +978,6 @@ export default function RifaClient({
               onClick={(e) => e.stopPropagation()}
             >
 
-              {/* CABEÇALHO DO MODAL */}
               <div className="relative border-b border-slate-100 px-6 py-5">
 
                 <button
@@ -989,7 +1010,6 @@ export default function RifaClient({
 
               </div>
 
-              {/* CONTEÚDO */}
               <div className="px-6 py-6">
 
                 {!ganhador ? (
@@ -1095,7 +1115,6 @@ export default function RifaClient({
 
               </div>
 
-              {/* RODAPÉ DO MODAL */}
               <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
 
                 {!ganhador ? (
