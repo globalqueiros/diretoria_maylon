@@ -16,6 +16,7 @@ import {
     TrendingUp,
     WalletCards,
 } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type TransactionType = "Entrada" | "Saída";
@@ -106,6 +107,9 @@ export default function FinanceiroPage() {
     const [type, setType] = useState("Todos");
     const [query, setQuery] = useState("");
 
+    // Estado do Pix BTG
+    const [pixAtivo, setPixAtivo] = useState(false);
+
     const receitas = transactions
         .filter((item) => item.type === "Entrada")
         .reduce((total, item) => total + item.value, 0);
@@ -173,8 +177,13 @@ export default function FinanceiroPage() {
         URL.revokeObjectURL(url);
     }
 
+    function handlePix() {
+        setPixAtivo((ativo) => !ativo);
+    }
+
     return (
         <main className="min-h-screen">
+            {/* HEADER */}
             <header className="mb-5 flex flex-col gap-4 text-white sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-[30px] font-extrabold tracking-tight">
@@ -186,15 +195,20 @@ export default function FinanceiroPage() {
                     </p>
                 </div>
 
-                <button
-                    onClick={() => window.location.reload()}
-                    className="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#00a99d] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#009990]"
-                >
-                    <RefreshCw size={17} />
-                    Atualizar
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    {/* ATUALIZAR */}
+                    <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#00a99d] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#009990]"
+                    >
+                        <RefreshCw size={17} />
+                        Atualizar
+                    </button>
+                </div>
             </header>
 
+            {/* CARDS PRINCIPAIS */}
             <section className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <SummaryCard
                     label="Saldo disponível"
@@ -218,6 +232,69 @@ export default function FinanceiroPage() {
                 />
             </section>
 
+            {/* PIX BTG */}
+            <section className="mb-5 overflow-hidden rounded-xl bg-white shadow-[0_2px_7px_rgba(17,61,67,0.10)]">
+                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[11px] bg-[#e2f9ef] text-[#008f70]">
+                            <Banknote size={23} />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-bold text-[#192c48]">
+                                Pix BTG Pactual
+                            </h2>
+                            <p className="text-sm text-[#5f7391]">
+                                Ative o Pix para receber pagamentos diretamente
+                                na sua conta.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Link
+                            href="https://auth.maylon.com.br/admin/pix/status" target="_black"
+                            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold text-white transition ${
+                                pixAtivo
+                                    ? "bg-[#d94c4c] hover:bg-[#c94141]"
+                                    : "bg-[#00a681] hover:bg-[#009574]"
+                            }`}
+                        >
+                            <Banknote size={16} />
+                            {pixAtivo
+                                ? "Desativar Pix"
+                                : "Ativar Pix"}
+                        </Link>
+                    </div>
+                </div>
+                {pixAtivo && (
+                    <div className="border-t border-[#edf1f5] bg-[#f8fcfa] px-5 py-4">
+                        <div className="flex flex-col gap-2 text-xs text-[#5f7391] sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <span className="font-semibold text-[#304a69]">
+                                    Status da integração:
+                                </span>{" "}
+                                Conectado
+                            </div>
+
+                            <div>
+                                <span className="font-semibold text-[#304a69]">
+                                    Banco:
+                                </span>{" "}
+                                BTG Pactual
+                            </div>
+
+                            <div>
+                                <span className="font-semibold text-[#304a69]">
+                                    Recebimento:
+                                </span>{" "}
+                                Pix
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </section>
+
+            {/* RESUMO FINANCEIRO */}
             <section className="mb-5 overflow-hidden rounded-xl bg-white shadow-[0_2px_7px_rgba(17,61,67,0.10)]">
                 <div className="flex min-h-[98px] items-center gap-3 border-b border-[#edf1f5] px-6 py-6">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[11px] bg-[#d3f9e8] text-[#00a681]">
@@ -242,13 +319,16 @@ export default function FinanceiroPage() {
                     </span>
                 </div>
 
+                {/* FILTROS */}
                 <div className="flex flex-wrap items-center gap-2 border-b border-[#edf1f5] px-6 py-4">
                     <label className="flex h-[38px] items-center gap-2 rounded-lg border border-[#dce4ed] bg-white px-3 text-[#5b6f8b]">
                         <CalendarDays size={16} />
 
                         <select
                             value={period}
-                            onChange={(event) => setPeriod(event.target.value)}
+                            onChange={(event) =>
+                                setPeriod(event.target.value)
+                            }
                             className="min-w-[125px] cursor-pointer border-0 bg-transparent text-xs text-[#334b69] outline-none"
                         >
                             <option>Hoje</option>
@@ -264,7 +344,9 @@ export default function FinanceiroPage() {
 
                         <select
                             value={type}
-                            onChange={(event) => setType(event.target.value)}
+                            onChange={(event) =>
+                                setType(event.target.value)
+                            }
                             className="min-w-[110px] cursor-pointer border-0 bg-transparent text-xs text-[#334b69] outline-none"
                         >
                             <option>Todos</option>
@@ -274,6 +356,7 @@ export default function FinanceiroPage() {
                     </label>
 
                     <button
+                        type="button"
                         onClick={handleExport}
                         className="ml-auto flex h-[38px] items-center gap-2 rounded-lg border border-[#dce4ed] bg-white px-4 text-xs font-semibold text-[#38516f] transition hover:bg-[#f6f9fb]"
                     >
@@ -282,6 +365,7 @@ export default function FinanceiroPage() {
                     </button>
                 </div>
 
+                {/* MINI CARDS */}
                 <div className="grid grid-cols-1 gap-3 p-5 md:grid-cols-3">
                     <MiniCard
                         label="Entradas"
@@ -306,6 +390,7 @@ export default function FinanceiroPage() {
                 </div>
             </section>
 
+            {/* MOVIMENTAÇÕES */}
             <section className="mb-5 overflow-hidden rounded-xl bg-white shadow-[0_2px_7px_rgba(17,61,67,0.10)]">
                 <div className="flex min-h-[91px] items-center gap-3 border-b border-[#edf1f5] px-6 py-5">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[11px] bg-[#dce9ff] text-[#1264e8]">
@@ -326,7 +411,9 @@ export default function FinanceiroPage() {
                         <input
                             type="text"
                             value={query}
-                            onChange={(event) => setQuery(event.target.value)}
+                            onChange={(event) =>
+                                setQuery(event.target.value)
+                            }
                             placeholder="Buscar movimentação..."
                             className="h-[38px] w-[235px] rounded-lg border border-[#dce4ed] px-3 text-xs text-[#314a69] outline-none transition placeholder:text-[#9aa9ba] focus:border-[#35b99b] focus:ring-3 focus:ring-[#35b99b]/10"
                         />
@@ -337,7 +424,9 @@ export default function FinanceiroPage() {
                     <input
                         type="text"
                         value={query}
-                        onChange={(event) => setQuery(event.target.value)}
+                        onChange={(event) =>
+                            setQuery(event.target.value)
+                        }
                         placeholder="Buscar movimentação..."
                         className="h-[38px] w-full rounded-lg border border-[#dce4ed] px-3 text-xs text-[#314a69] outline-none focus:border-[#35b99b]"
                     />
@@ -374,14 +463,17 @@ export default function FinanceiroPage() {
                                             {item.description}
                                         </TableCell>
 
-                                        <TableCell>{item.category}</TableCell>
+                                        <TableCell>
+                                            {item.category}
+                                        </TableCell>
 
                                         <TableCell>
                                             <span
-                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${item.type === "Entrada"
+                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                                    item.type === "Entrada"
                                                         ? "bg-[#e2f9ef] text-[#009b76]"
                                                         : "bg-[#ffe8e8] text-[#db4747]"
-                                                    }`}
+                                                }`}
                                             >
                                                 {item.type === "Entrada" ? (
                                                     <ArrowDownToLine size={13} />
@@ -394,12 +486,15 @@ export default function FinanceiroPage() {
                                         </TableCell>
 
                                         <TableCell
-                                            className={`font-bold ${item.type === "Entrada"
+                                            className={`font-bold ${
+                                                item.type === "Entrada"
                                                     ? "text-[#009b76]"
                                                     : "text-[#d94c4c]"
-                                                }`}
+                                            }`}
                                         >
-                                            {item.type === "Entrada" ? "+" : "-"}{" "}
+                                            {item.type === "Entrada"
+                                                ? "+"
+                                                : "-"}{" "}
                                             {money.format(item.value)}
                                         </TableCell>
 
@@ -432,6 +527,7 @@ export default function FinanceiroPage() {
 
                     <div className="flex gap-1.5">
                         <button
+                            type="button"
                             disabled
                             className="flex h-[38px] items-center gap-1 rounded-lg border border-[#e3e9ef] bg-white px-3 text-xs text-[#a7b3c1] disabled:cursor-not-allowed"
                         >
@@ -440,6 +536,7 @@ export default function FinanceiroPage() {
                         </button>
 
                         <button
+                            type="button"
                             disabled
                             className="flex h-[38px] items-center gap-1 rounded-lg border border-[#e3e9ef] bg-white px-3 text-xs text-[#a7b3c1] disabled:cursor-not-allowed"
                         >
@@ -450,7 +547,9 @@ export default function FinanceiroPage() {
                 </div>
             </section>
 
+            {/* CARDS INFERIORES */}
             <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {/* PRÓXIMO REPASSE */}
                 <section className="overflow-hidden rounded-xl bg-white shadow-[0_2px_7px_rgba(17,61,67,0.10)]">
                     <div className="flex min-h-[91px] items-center gap-3 border-b border-[#edf1f5] px-6 py-5">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[11px] bg-[#e9e1ff] text-[#7651d8]">
@@ -491,6 +590,7 @@ export default function FinanceiroPage() {
                     </div>
                 </section>
 
+                {/* CONTAS A RECEBER */}
                 <section className="overflow-hidden rounded-xl bg-white shadow-[0_2px_7px_rgba(17,61,67,0.10)]">
                     <div className="flex min-h-[91px] items-center gap-3 border-b border-[#edf1f5] px-6 py-5">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[11px] bg-[#ffead3] text-[#e58a18]">
@@ -517,7 +617,9 @@ export default function FinanceiroPage() {
                     <div className="flex min-h-[45px] items-center justify-between border-t border-[#edf1f5] px-6 py-3 text-xs text-[#687c96]">
                         <span>Transações pendentes</span>
 
-                        <strong className="text-[#304a69]">0</strong>
+                        <strong className="text-[#304a69]">
+                            0
+                        </strong>
                     </div>
 
                     <div className="flex min-h-[45px] items-center justify-between border-t border-[#edf1f5] px-6 py-3 text-xs text-[#687c96]">
@@ -530,7 +632,9 @@ export default function FinanceiroPage() {
                 </section>
             </section>
 
+            {/* BOTÃO DE AJUDA */}
             <button
+                type="button"
                 aria-label="Ajuda"
                 className="fixed bottom-5 right-5 flex h-16 w-16 items-center justify-center rounded-full border-0 bg-[#00a6ad] text-2xl font-bold text-white shadow-[0_8px_22px_rgba(0,76,87,0.25)] transition hover:-translate-y-1 hover:bg-[#00969d]"
             >
@@ -539,6 +643,10 @@ export default function FinanceiroPage() {
         </main>
     );
 }
+
+/* =========================
+   COMPONENTE SUMMARY CARD
+========================= */
 
 function SummaryCard({
     label,
@@ -554,7 +662,9 @@ function SummaryCard({
     return (
         <div className="flex min-h-[101px] items-center justify-between rounded-xl bg-white p-5 shadow-[0_2px_7px_rgba(17,61,67,0.10)]">
             <div>
-                <p className="mb-2 text-sm text-[#526887]">{label}</p>
+                <p className="mb-2 text-sm text-[#526887]">
+                    {label}
+                </p>
 
                 <strong className="text-2xl font-extrabold tracking-tight text-[#12284a]">
                     {money.format(value)}
@@ -569,6 +679,10 @@ function SummaryCard({
         </div>
     );
 }
+
+/* =========================
+   COMPONENTE MINI CARD
+========================= */
 
 function MiniCard({
     label,
@@ -602,6 +716,10 @@ function MiniCard({
     );
 }
 
+/* =========================
+   COMPONENTE TABLE HEAD
+========================= */
+
 function TableHead({
     children,
 }: {
@@ -613,6 +731,10 @@ function TableHead({
         </th>
     );
 }
+
+/* =========================
+   COMPONENTE TABLE CELL
+========================= */
 
 function TableCell({
     children,

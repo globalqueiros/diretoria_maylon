@@ -10,14 +10,16 @@ import {
   MessageCircle,
   MoreVertical,
   Phone,
+  Play,
   Plus,
   Search,
   Send,
+  Star,
   UserRound,
   UsersRound,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type StatusAtendimento =
   | "aberto"
@@ -34,136 +36,48 @@ type Atendimento = {
   ultimaMensagem: string;
   horario: string;
   status: StatusAtendimento;
-  mensagens: {
-    id: number;
-    remetente: "cliente" | "atendente";
-    texto: string;
-    horario: string;
-  }[];
 };
 
-const ATENDIMENTOS_INICIAIS: Atendimento[] = [
-  {
-    id: 1,
-    protocolo: "ATD-20260921-001",
-    nome: "Carlos Eduardo",
-    telefone: "(11) 99872-4512",
-    assunto: "Problema durante a viagem",
-    ultimaMensagem: "Preciso de ajuda com uma cobrança.",
-    horario: "03:18",
-    status: "andamento",
-    mensagens: [
-      {
-        id: 1,
-        remetente: "cliente",
-        texto:
-          "Olá, tive um problema com uma cobrança da minha última viagem.",
-        horario: "03:14",
-      },
-      {
-        id: 2,
-        remetente: "atendente",
-        texto:
-          "Olá, Carlos. Vou verificar o que aconteceu para você.",
-        horario: "03:15",
-      },
-      {
-        id: 3,
-        remetente: "cliente",
-        texto: "Preciso de ajuda com uma cobrança.",
-        horario: "03:18",
-      },
-    ],
-  },
-  {
-    id: 2,
-    protocolo: "ATD-20260921-002",
-    nome: "Mariana Santos",
-    telefone: "(11) 98745-2310",
-    assunto: "Objeto perdido",
-    ultimaMensagem: "Deixei meu celular no veículo.",
-    horario: "03:09",
-    status: "aguardando",
-    mensagens: [
-      {
-        id: 1,
-        remetente: "cliente",
-        texto: "Acredito que deixei meu celular no carro.",
-        horario: "03:04",
-      },
-      {
-        id: 2,
-        remetente: "atendente",
-        texto:
-          "Vou verificar as informações da sua viagem.",
-        horario: "03:06",
-      },
-      {
-        id: 3,
-        remetente: "cliente",
-        texto: "Deixei meu celular no veículo.",
-        horario: "03:09",
-      },
-    ],
-  },
-  {
-    id: 3,
-    protocolo: "ATD-20260921-003",
-    nome: "Rafael Oliveira",
-    telefone: "(11) 97654-9821",
-    assunto: "Cancelamento de viagem",
-    ultimaMensagem: "Gostaria de cancelar minha solicitação.",
-    horario: "02:57",
-    status: "aberto",
-    mensagens: [
-      {
-        id: 1,
-        remetente: "cliente",
-        texto: "Gostaria de cancelar minha solicitação.",
-        horario: "02:57",
-      },
-    ],
-  },
-  {
-    id: 4,
-    protocolo: "ATD-20260920-184",
-    nome: "Fernanda Alves",
-    telefone: "(11) 96542-7788",
-    assunto: "Pagamento",
-    ultimaMensagem: "Obrigado pelo atendimento.",
-    horario: "Ontem",
-    status: "encerrado",
-    mensagens: [
-      {
-        id: 1,
-        remetente: "cliente",
-        texto: "Meu pagamento não foi identificado.",
-        horario: "Ontem 18:41",
-      },
-      {
-        id: 2,
-        remetente: "atendente",
-        texto:
-          "Verifiquei o pagamento e ele já foi identificado no sistema.",
-        horario: "Ontem 18:47",
-      },
-      {
-        id: 3,
-        remetente: "cliente",
-        texto: "Obrigado pelo atendimento.",
-        horario: "Ontem 18:49",
-      },
-    ],
-  },
-];
+type Mensagem = {
+  id: number;
+  remetente: "cliente" | "atendente";
+  texto: string;
+  horario: string;
+};
 
-const ATENDENTES = [
-  "Atendimento Geral",
-  "Suporte Financeiro",
-  "Suporte ao Motorista",
-  "Suporte ao Passageiro",
-  "Supervisão",
-];
+type HuggyChat = {
+  id: number;
+  situation?: string | null;
+  unread?: string | number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  attendedAt?: string | null;
+  closedAt?: string | null;
+  channel?: string | null;
+  lastMessage?: { text?: string | null; sendAt?: string | null } | null;
+  chatCustomer?: {
+    id?: number;
+    name?: string | null;
+    mobile?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    photo?: string | null;
+  } | null;
+};
+
+type HuggyMessage = {
+  id: number;
+  text?: string | null;
+  senderType?: string | null;
+  sendAt?: string | null;
+  type?: string | null;
+  file?: string | null;
+};
+
+type Departamento = {
+  id: number;
+  name: string;
+};
 
 function statusLabel(status: StatusAtendimento) {
   switch (status) {
@@ -197,14 +111,153 @@ function statusClass(status: StatusAtendimento) {
   }
 }
 
+function channelLabel(channel?: string | null) {
+  switch (channel) {
+    case "whatsapp":
+      return "WhatsApp";
+
+    case "widget":
+      return "Chat online";
+
+    case "email":
+      return "E-mail";
+
+    case "telegram-bot":
+      return "Telegram";
+
+    case "messenger":
+      return "Messenger";
+
+    default:
+      return channel || "Conversa";
+  }
+}
+
+function tipoMensagemLabel(type: string) {
+  switch (type) {
+    case "image":
+      return "Imagem";
+
+    case "audio":
+      return "Áudio";
+
+    case "video":
+      return "Vídeo";
+
+    case "document":
+      return "Documento";
+
+    case "email":
+      return "E-mail";
+
+    case "sms":
+      return "SMS";
+
+    default:
+      return "Arquivo";
+  }
+}
+
+function formatHorario(value?: string | null) {
+  if (!value) return "";
+
+  const date = new Date(value.replace(" ", "T"));
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const agora = new Date();
+
+  if (date.toDateString() === agora.toDateString()) {
+    return date.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const ontem = new Date(agora);
+  ontem.setDate(agora.getDate() - 1);
+
+  if (date.toDateString() === ontem.toDateString()) {
+    return "Ontem";
+  }
+
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function sendAtTs(value?: string | null): number {
+  if (!value) return 0;
+
+  const t = new Date(value.replace(" ", "T")).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+function mapSituationToStatus(chat: HuggyChat): StatusAtendimento {
+  const situation = chat.situation;
+
+  if (situation === "filed" || chat.closedAt) {
+    return "encerrado";
+  }
+
+  if (situation === "wait_for_chat" || situation === "auto") {
+    return "aberto";
+  }
+
+  if (situation === "blocked" || situation === "finishing") {
+    return "aguardando";
+  }
+
+  if (situation === "in_chat") {
+    const unread = Number(chat.unread ?? 0);
+    return unread > 0 ? "aguardando" : "andamento";
+  }
+
+  return "andamento";
+}
+
+function mapChat(chat: HuggyChat): Atendimento {
+  const nome = chat.chatCustomer?.name?.trim() || "Cliente";
+  const telefone =
+    chat.chatCustomer?.mobile?.trim() ||
+    chat.chatCustomer?.phone?.trim() ||
+    "Não informado";
+  const ultimaMensagem = chat.lastMessage?.text?.trim() || "";
+
+  return {
+    id: chat.id,
+    protocolo: `#${chat.id}`,
+    nome,
+    telefone,
+    assunto: channelLabel(chat.channel),
+    ultimaMensagem,
+    horario: formatHorario(chat.updatedAt ?? chat.lastMessage?.sendAt),
+    status: mapSituationToStatus(chat),
+  };
+}
+
+function mapMessage(msg: HuggyMessage): Mensagem {
+  let texto = msg.text ?? "";
+
+  if (!texto && msg.type && msg.type !== "text") {
+    texto = tipoMensagemLabel(msg.type);
+  }
+
+  return {
+    id: msg.id,
+    remetente: msg.senderType === "agent" ? "atendente" : "cliente",
+    texto,
+    horario: formatHorario(msg.sendAt),
+  };
+}
+
 export default function AtendimentoPage() {
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>(
-    ATENDIMENTOS_INICIAIS
+    []
   );
 
-  const [selecionadoId, setSelecionadoId] = useState<number>(
-    ATENDIMENTOS_INICIAIS[0]?.id ?? 0
-  );
+  const [selecionadoId, setSelecionadoId] = useState<number>(0);
 
   const [busca, setBusca] = useState("");
 
@@ -225,6 +278,23 @@ export default function AtendimentoPage() {
   const [novoNome, setNovoNome] = useState("");
   const [novoTelefone, setNovoTelefone] = useState("");
   const [novoAssunto, setNovoAssunto] = useState("");
+
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const [erroAcao, setErroAcao] = useState("");
+
+  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [carregandoMensagens, setCarregandoMensagens] =
+    useState(false);
+
+  const [departamentos, setDepartamentos] = useState<Departamento[]>(
+    []
+  );
+  const [carregandoDepartamentos, setCarregandoDepartamentos] =
+    useState(false);
+
+  const selecionadoIdRef = useRef<number>(0);
+  const mensagensRef = useRef<HTMLDivElement>(null);
 
   const selecionado = atendimentos.find(
     (item) => item.id === selecionadoId
@@ -257,6 +327,110 @@ export default function AtendimentoPage() {
   const encerrados = atendimentos.filter(
     (item) => item.status === "encerrado"
   ).length;
+
+  async function carregarAtendimentos() {
+    try {
+      const res = await fetch("/api/huggy/chats", {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const body = await res.json();
+          detail = body?.error || body?.detail || "";
+        } catch {
+          detail = "";
+        }
+        setErro(
+          detail ||
+          `Não foi possível carregar os atendimentos (HTTP ${res.status}).`
+        );
+        return;
+      }
+
+      const data = await res.json();
+      const lista = Array.isArray(data) ? data : [];
+
+      setAtendimentos(
+        (lista as HuggyChat[]).map((chat) => mapChat(chat))
+      );
+      setErro("");
+    } catch (error) {
+      console.error(error);
+      setErro(
+        "Falha ao conectar com a central de atendimento. Verifique as credenciais Huggy."
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  async function carregarMensagens(chatId: number) {
+    setCarregandoMensagens(true);
+
+    try {
+      const res = await fetch(
+        `/api/huggy/chats/${chatId}/messages`,
+        { cache: "no-store" }
+      );
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const lista = Array.isArray(data) ? data : [];
+
+      const mensagens = (lista as HuggyMessage[])
+        .slice()
+        .sort((a, b) => sendAtTs(a.sendAt) - sendAtTs(b.sendAt))
+        .map((msg) => mapMessage(msg));
+
+      setMensagens(mensagens);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCarregandoMensagens(false);
+    }
+  }
+
+  function selecionarAtendimento(item: Atendimento) {
+    setSelecionadoId(item.id);
+    selecionadoIdRef.current = item.id;
+    setMostrarMenuSituacao(false);
+    setMensagens([]);
+
+    carregarMensagens(item.id);
+
+    if (
+      item.status === "andamento" ||
+      item.status === "aguardando"
+    ) {
+      fetch(`/api/huggy/chats/${item.id}/read`, {
+        method: "PUT",
+      }).catch(() => { });
+    }
+  }
+
+  useEffect(() => {
+    carregarAtendimentos();
+
+    const interval = setInterval(() => {
+      carregarAtendimentos();
+
+      if (selecionadoIdRef.current) {
+        carregarMensagens(selecionadoIdRef.current);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    mensagensRef.current?.scrollTo({
+      top: mensagensRef.current.scrollHeight,
+      behavior: "auto",
+    });
+  }, [mensagens]);
 
   useEffect(() => {
     if (!mostrarMenuSituacao) return;
@@ -321,117 +495,248 @@ export default function AtendimentoPage() {
     };
   }, [selecionado]);
 
-  function enviarMensagem() {
+  async function enviarMensagem() {
     if (!mensagem.trim() || !selecionado) return;
 
     const textoMensagem = mensagem.trim();
 
-    setAtendimentos((atual) =>
-      atual.map((item) => {
-        if (item.id !== selecionado.id) return item;
+    setMensagens((atual) => [
+      ...atual,
+      {
+        id: Date.now(),
+        remetente: "atendente",
+        texto: textoMensagem,
+        horario: "Agora",
+      },
+    ]);
 
-        return {
-          ...item,
-          status: "andamento",
-          ultimaMensagem: textoMensagem,
-          horario: "Agora",
-          mensagens: [
-            ...item.mensagens,
-            {
-              id: Date.now(),
-              remetente: "atendente",
-              texto: textoMensagem,
-              horario: "Agora",
-            },
-          ],
-        };
-      })
+    setAtendimentos((atual) =>
+      atual.map((item) =>
+        item.id === selecionado.id
+          ? {
+            ...item,
+            status: "andamento",
+            ultimaMensagem: textoMensagem,
+            horario: "Agora",
+          }
+          : item
+      )
     );
 
     setMensagem("");
+
+    try {
+      const res = await fetch(
+        `/api/huggy/chats/${selecionado.id}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: textoMensagem }),
+        }
+      );
+
+      if (!res.ok) {
+        setErroAcao("Não foi possível enviar a mensagem.");
+      }
+    } catch (error) {
+      console.error(error);
+      setErroAcao("Não foi possível enviar a mensagem.");
+    }
   }
 
-  function encerrarAtendimento() {
+  async function encerrarAtendimento() {
     if (!selecionado) return;
 
     setAtendimentos((atual) =>
       atual.map((item) =>
         item.id === selecionado.id
           ? {
-              ...item,
-              status: "encerrado",
-              ultimaMensagem:
-                "Atendimento encerrado.",
-              horario: "Agora",
-            }
-          : item
-      )
-    );
-  }
-
-  function recolocarNaFila() {
-    if (!selecionado) return;
-
-    setAtendimentos((atual) =>
-      atual.map((item) =>
-        item.id === selecionado.id
-          ? {
-              ...item,
-              status: "aguardando",
-              ultimaMensagem:
-                "Atendimento recolocado na fila.",
-              horario: "Agora",
-            }
-          : item
-      )
-    );
-
-    setMostrarMenuSituacao(false);
-  }
-
-  function arquivarConversa() {
-    if (!selecionado) return;
-
-    setAtendimentos((atual) =>
-      atual.map((item) =>
-        item.id === selecionado.id
-          ? {
-              ...item,
-              status: "encerrado",
-              ultimaMensagem:
-                "Conversa arquivada.",
-              horario: "Agora",
-            }
+            ...item,
+            status: "encerrado",
+            ultimaMensagem:
+              "Atendimento encerrado.",
+            horario: "Agora",
+          }
           : item
       )
     );
 
-    setMostrarMenuSituacao(false);
+    try {
+      await fetch(`/api/huggy/chats/${selecionado.id}/close`, {
+        method: "PUT",
+      });
+
+      await carregarAtendimentos();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  function finalizarConversa() {
+  async function recolocarNaFila() {
     if (!selecionado) return;
 
     setAtendimentos((atual) =>
       atual.map((item) =>
         item.id === selecionado.id
           ? {
-              ...item,
-              status: "encerrado",
-              ultimaMensagem:
-                "Atendimento finalizado.",
-              horario: "Agora",
-            }
+            ...item,
+            status: "aguardando",
+            ultimaMensagem:
+              "Atendimento recolocado na fila.",
+            horario: "Agora",
+          }
           : item
       )
     );
 
     setMostrarMenuSituacao(false);
+
+    try {
+      await fetch(`/api/huggy/chats/${selecionado.id}/queue`, {
+        method: "PUT",
+      });
+
+      await carregarAtendimentos();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function arquivarConversa() {
+    if (!selecionado) return;
+
+    setAtendimentos((atual) =>
+      atual.map((item) =>
+        item.id === selecionado.id
+          ? {
+            ...item,
+            status: "encerrado",
+            ultimaMensagem:
+              "Conversa arquivada.",
+            horario: "Agora",
+          }
+          : item
+      )
+    );
+
+    setMostrarMenuSituacao(false);
+
+    try {
+      await fetch(`/api/huggy/chats/${selecionado.id}/close`, {
+        method: "PUT",
+      });
+
+      await carregarAtendimentos();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function finalizarConversa() {
+    if (!selecionado) return;
+
+    setAtendimentos((atual) =>
+      atual.map((item) =>
+        item.id === selecionado.id
+          ? {
+            ...item,
+            status: "encerrado",
+            ultimaMensagem:
+              "Atendimento finalizado.",
+            horario: "Agora",
+          }
+          : item
+      )
+    );
+
+    setMostrarMenuSituacao(false);
+
+    try {
+      await fetch(`/api/huggy/chats/${selecionado.id}/close`, {
+        method: "PUT",
+      });
+
+      await carregarAtendimentos();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function iniciarAtendimento() {
+    if (!selecionado) return;
+
+    setErroAcao("");
+
+    setAtendimentos((atual) =>
+      atual.map((item) =>
+        item.id === selecionado.id
+          ? {
+            ...item,
+            status: "andamento",
+            horario: "Agora",
+          }
+          : item
+      )
+    );
+
+    try {
+      const res = await fetch(
+        `/api/huggy/chats/${selecionado.id}/assignToMe`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const body = await res.json();
+          detail = body?.error || body?.detail || "";
+        } catch {
+          detail = "";
+        }
+        setErroAcao(
+          detail ||
+          `Não foi possível iniciar o atendimento (HTTP ${res.status}).`
+        );
+        await carregarAtendimentos();
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      await carregarAtendimentos();
+      await carregarMensagens(selecionado.id);
+    } catch (error) {
+      console.error(error);
+      setErroAcao("Falha ao iniciar o atendimento. Tente novamente.");
+      await carregarAtendimentos();
+    }
+  }
+
+  async function carregarDepartamentos() {
+    setCarregandoDepartamentos(true);
+
+    try {
+      const res = await fetch("/api/huggy/departments/parents", {
+        cache: "no-store",
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setDepartamentos(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCarregandoDepartamentos(false);
+    }
   }
 
   function abrirTransferencia() {
     setMostrarMenuSituacao(false);
     setMostrarTransferencia(true);
+    carregarDepartamentos();
   }
 
   function criarAtendimento() {
@@ -443,8 +748,8 @@ export default function AtendimentoPage() {
         .toISOString()
         .slice(0, 10)
         .replaceAll("-", "")}-${String(
-        atendimentos.length + 1
-      ).padStart(3, "0")}`,
+          atendimentos.length + 1
+        ).padStart(3, "0")}`,
       nome: novoNome.trim(),
       telefone:
         novoTelefone.trim() || "Não informado",
@@ -453,12 +758,12 @@ export default function AtendimentoPage() {
         "Novo atendimento iniciado.",
       horario: "Agora",
       status: "aberto",
-      mensagens: [],
     };
 
     setAtendimentos((atual) => [novo, ...atual]);
 
     setSelecionadoId(novo.id);
+    setMensagens([]);
 
     setNovoNome("");
     setNovoTelefone("");
@@ -467,23 +772,58 @@ export default function AtendimentoPage() {
     setMostrarNovo(false);
   }
 
-  function transferirAtendimento(nome: string) {
+  async function transferirParaDepartamento(dept: Departamento) {
     if (!selecionado) return;
+
+    setErroAcao("");
 
     setAtendimentos((atual) =>
       atual.map((item) =>
         item.id === selecionado.id
           ? {
-              ...item,
-              ultimaMensagem: `Atendimento transferido para ${nome}.`,
-              status: "aguardando",
-              horario: "Agora",
-            }
+            ...item,
+            ultimaMensagem: `Atendimento transferido para ${dept.name}.`,
+            status: "aguardando",
+            horario: "Agora",
+          }
           : item
       )
     );
 
     setMostrarTransferencia(false);
+
+    try {
+      const res = await fetch(
+        `/api/huggy/chats/${selecionado.id}/department`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ department: dept.id }),
+        }
+      );
+
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const body = await res.json();
+          detail = body?.error || body?.detail || "";
+        } catch {
+          detail = "";
+        }
+        setErroAcao(
+          detail ||
+          "Não foi possível transferir o atendimento."
+        );
+        await carregarAtendimentos();
+        return;
+      }
+
+      await carregarAtendimentos();
+    } catch (error) {
+      console.error(error);
+      setErroAcao("Não foi possível transferir o atendimento.");
+      await carregarAtendimentos();
+    }
   }
 
   return (
@@ -528,6 +868,12 @@ export default function AtendimentoPage() {
             </button>
           </div>
         </header>
+
+        {erroAcao && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            {erroAcao}
+          </div>
+        )}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -576,22 +922,27 @@ export default function AtendimentoPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">
-                  Histórico de Conversas
+                  Pesquisa de Satisfação
                 </p>
 
                 <p className="mt-2 text-3xl font-bold text-slate-800">
                   {encerrados}
                 </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Pesquisas encerradas
+                </p>
               </div>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
-                <Archive
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
+                <Star
                   size={21}
-                  className="text-slate-600"
+                  className="text-amber-500"
                 />
               </div>
             </div>
           </div>
+
 
           <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
@@ -648,15 +999,14 @@ export default function AtendimentoPage() {
                     onClick={() =>
                       setFiltro(
                         valor as
-                          | "todos"
-                          | StatusAtendimento
+                        | "todos"
+                        | StatusAtendimento
                       )
                     }
-                    className={`cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                      filtro === valor
+                    className={`cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition ${filtro === valor
                         ? "bg-[#e8f7f3] text-[#149C8B]"
                         : "bg-slate-50 text-slate-500 hover:bg-slate-100"
-                    }`}
+                      }`}
                   >
                     {label}
                   </button>
@@ -673,8 +1023,18 @@ export default function AtendimentoPage() {
                   />
 
                   <p className="mt-3 text-sm font-semibold text-slate-600">
-                    Nenhum atendimento encontrado
+                    {carregando
+                      ? "Carregando atendimentos..."
+                      : erro
+                        ? "Erro ao carregar atendimentos"
+                        : "Nenhum atendimento encontrado"}
                   </p>
+
+                  {!carregando && erro && (
+                    <p className="mx-auto mt-2 max-w-[280px] text-xs text-slate-400">
+                      {erro}
+                    </p>
+                  )}
                 </div>
               ) : (
                 filtrados.map((item) => (
@@ -682,14 +1042,12 @@ export default function AtendimentoPage() {
                     key={item.id}
                     type="button"
                     onClick={() => {
-                      setSelecionadoId(item.id);
-                      setMostrarMenuSituacao(false);
+                      selecionarAtendimento(item);
                     }}
-                    className={`w-full cursor-pointer border-b border-slate-100 p-4 text-left transition ${
-                      selecionadoId === item.id
+                    className={`w-full cursor-pointer border-b border-slate-100 p-4 text-left transition ${selecionadoId === item.id
                         ? "bg-[#e8f7f3]"
                         : "hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <div className="flex gap-3">
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#149C8B] text-sm font-bold text-white">
@@ -735,7 +1093,7 @@ export default function AtendimentoPage() {
             </div>
           </aside>
 
-          <div className="flex min-h-[650px] flex-col">
+          <div className="flex h-[850px] flex-col">
             {selecionado ? (
               <>
                 <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -777,32 +1135,45 @@ export default function AtendimentoPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMostrarTransferencia(true)
-                      }
-                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-                    >
-                      <ArrowRight size={15} />
-                      Transferir
-                    </button>
-
-                    {selecionado.status !==
-                      "encerrado" && (
+                    {selecionado.status === "aberto" ? (
                       <button
                         type="button"
-                        onClick={
-                          encerrarAtendimento
-                        }
-                        className="flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                        onClick={iniciarAtendimento}
+                        className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#149C8B] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#118777]"
                       >
-                        <CheckCircle2
-                          size={15}
-                        />
-                        Encerrar
+                        <Play size={15} />
+                        Iniciar Atendimento
                       </button>
+                    ) : (
+                      selecionado.status !== "encerrado" && (
+                        <button
+                          type="button"
+                          onClick={abrirTransferencia}
+                          className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                        >
+                          <ArrowRight size={15} />
+                          Transferir
+                        </button>
+                      )
                     )}
+
+                    {selecionado.status !==
+                      "encerrado" &&
+                      selecionado.status !==
+                      "aberto" && (
+                        <button
+                          type="button"
+                          onClick={
+                            encerrarAtendimento
+                          }
+                          className="flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          <CheckCircle2
+                            size={15}
+                          />
+                          Encerrar
+                        </button>
+                      )}
 
                     <div
                       className="relative"
@@ -815,11 +1186,10 @@ export default function AtendimentoPage() {
                             (valor) => !valor
                           )
                         }
-                        className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition ${
-                          mostrarMenuSituacao
+                        className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition ${mostrarMenuSituacao
                             ? "border-[#149C8B] bg-[#e8f7f3] text-[#149C8B]"
                             : "border-slate-200 text-slate-500 hover:bg-slate-50"
-                        }`}
+                          }`}
                       >
                         <MoreVertical
                           size={17}
@@ -952,9 +1322,17 @@ export default function AtendimentoPage() {
                   </span>
                 </div>
 
-                <div className="flex-1 space-y-5 overflow-y-auto bg-[#f8fafc] p-5">
-                  {selecionado.mensagens.length ===
-                  0 ? (
+                <div
+                  ref={mensagensRef}
+                  className="flex-1 min-h-0 space-y-5 overflow-y-auto bg-[#f8fafc] p-5"
+                >
+                  {carregandoMensagens ? (
+                    <div className="flex h-full min-h-[350px] items-center justify-center text-center">
+                      <p className="text-sm text-slate-400">
+                        Carregando conversa...
+                      </p>
+                    </div>
+                  ) : mensagens.length === 0 ? (
                     <div className="flex h-full min-h-[350px] items-center justify-center text-center">
                       <div>
                         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f7f3]">
@@ -975,48 +1353,65 @@ export default function AtendimentoPage() {
                       </div>
                     </div>
                   ) : (
-                    selecionado.mensagens.map(
-                      (item) => (
-                        <div
-                          key={item.id}
-                          className={`flex ${
-                            item.remetente ===
+                    mensagens.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`flex ${item.remetente ===
                             "atendente"
-                              ? "justify-end"
-                              : "justify-start"
+                            ? "justify-end"
+                            : "justify-start"
                           }`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
-                              item.remetente ===
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${item.remetente ===
                               "atendente"
-                                ? "rounded-br-md bg-[#149C8B] text-white"
-                                : "rounded-bl-md bg-white text-slate-700"
+                              ? "rounded-br-md bg-[#149C8B] text-white"
+                              : "rounded-bl-md bg-white text-slate-700"
                             }`}
-                          >
-                            <p className="text-sm leading-6">
-                              {item.texto}
-                            </p>
+                        >
+                          <p className="text-sm leading-6">
+                            {item.texto}
+                          </p>
 
-                            <p
-                              className={`mt-1 text-[10px] ${
-                                item.remetente ===
+                          <p
+                            className={`mt-1 text-[10px] ${item.remetente ===
                                 "atendente"
-                                  ? "text-white/70"
-                                  : "text-slate-400"
+                                ? "text-white/70"
+                                : "text-slate-400"
                               }`}
-                            >
-                              {item.horario}
-                            </p>
-                          </div>
+                          >
+                            {item.horario}
+                          </p>
                         </div>
-                      )
-                    )
+                      </div>
+                    ))
                   )}
                 </div>
 
-                {selecionado.status !==
-                "encerrado" ? (
+                {selecionado.status === "encerrado" ? (
+                  <div className="border-t border-slate-100 bg-white p-4 text-center">
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
+                      <CheckCircle2 size={17} />
+                      Atendimento encerrado
+                    </div>
+                  </div>
+                ) : selecionado.status === "aberto" ? (
+                  <div className="border-t border-slate-100 bg-white p-6 text-center">
+                    <button
+                      type="button"
+                      onClick={iniciarAtendimento}
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#149C8B] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#118777]"
+                    >
+                      <Play size={18} />
+                      Iniciar Atendimento
+                    </button>
+
+                    <p className="mt-2 text-[11px] text-slate-400">
+                      Pegue a conversa para começar a
+                      responder.
+                    </p>
+                  </div>
+                ) : (
                   <div className="border-t border-slate-100 bg-white p-4">
                     <div className="flex items-end gap-3">
                       <textarea
@@ -1029,7 +1424,7 @@ export default function AtendimentoPage() {
                         onKeyDown={(event) => {
                           if (
                             event.key ===
-                              "Enter" &&
+                            "Enter" &&
                             !event.shiftKey
                           ) {
                             event.preventDefault();
@@ -1054,13 +1449,6 @@ export default function AtendimentoPage() {
                       Pressione Enter para enviar •
                       Shift + Enter para nova linha
                     </p>
-                  </div>
-                ) : (
-                  <div className="border-t border-slate-100 bg-white p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
-                      <CheckCircle2 size={17} />
-                      Atendimento encerrado
-                    </div>
                   </div>
                 )}
               </>
@@ -1219,40 +1607,50 @@ export default function AtendimentoPage() {
             </div>
 
             <div className="space-y-2 p-5">
-              {ATENDENTES.map((nome) => (
-                <button
-                  key={nome}
-                  type="button"
-                  onClick={() =>
-                    transferirAtendimento(nome)
-                  }
-                  className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#149C8B] hover:bg-[#e8f7f3]"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                      <UserRound
-                        size={18}
-                        className="text-slate-500"
-                      />
+              {carregandoDepartamentos ? (
+                <div className="py-8 text-center text-sm text-slate-400">
+                  Carregando departamentos...
+                </div>
+              ) : departamentos.length === 0 ? (
+                <div className="py-8 text-center text-sm text-slate-400">
+                  Nenhum departamento disponível.
+                </div>
+              ) : (
+                departamentos.map((dept) => (
+                  <button
+                    key={dept.id}
+                    type="button"
+                    onClick={() =>
+                      transferirParaDepartamento(dept)
+                    }
+                    className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#149C8B] hover:bg-[#e8f7f3]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                        <UserRound
+                          size={18}
+                          className="text-slate-500"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {dept.name}
+                        </p>
+
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          Departamento
+                        </p>
+                      </div>
                     </div>
 
-                    <div>
-                      <p className="text-sm font-semibold text-slate-700">
-                        {nome}
-                      </p>
-
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        Atendimento disponível
-                      </p>
-                    </div>
-                  </div>
-
-                  <ArrowRight
-                    size={17}
-                    className="text-slate-400"
-                  />
-                </button>
-              ))}
+                    <ArrowRight
+                      size={17}
+                      className="text-slate-400"
+                    />
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>

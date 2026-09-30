@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# huggy token cache (rotated refresh token)
+.huggy-token.json
 
 # vercel
 .vercel

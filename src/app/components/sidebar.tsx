@@ -28,6 +28,7 @@ import {
   Wallet,
   LocateFixed,
   Megaphone,
+  BadgeCheck,
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSlack } from "@fortawesome/free-brands-svg-icons";
@@ -155,9 +156,9 @@ const menuDiretor: MenuItem[] = [
     href: "/diretor/financeiro",
   },
   {
-    name: "Compras",
-    icon: Percent,
-    href: "/diretor/compras",
+    name: "Verificações",
+    icon: BadgeCheck,
+    href: "/diretor/verificacao",
   },
   {
     name: "Recursos Humanos (RH)",
