@@ -91,6 +91,7 @@ type VerificacaoDocumento = {
   didit_status?: string | null;
   is_verified?: boolean | null;
   identity_match?: unknown;
+  documento_tipo?: string | null;
 };
 
 type ProvaVida = {

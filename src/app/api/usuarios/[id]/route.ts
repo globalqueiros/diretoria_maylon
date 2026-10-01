@@ -234,6 +234,7 @@ export async function GET(
       didit_status: string | null;
       is_verified: boolean;
       identity_match: unknown;
+      documento_tipo: string | null;
     } | null = null;
 
     let provaVida: {
@@ -279,6 +280,7 @@ export async function GET(
 
         let lastLivenessAt: string | null = null;
         let identityMatch: unknown = null;
+        let documentoTipo: string | null = null;
 
         if (verifRow?.attempt_details) {
           try {
@@ -306,6 +308,21 @@ export async function GET(
                 IDENTITY_MATCH_KEY
               ];
             }
+
+            // Tipo de documento aprovado (ex: Identity Card, Driving License)
+            const decisao = (detalhes as Record<string, unknown>)?.[
+              "decision"
+            ] as Record<string, unknown> | undefined;
+
+            const idVerificacoes = decisao?.["id_verifications"];
+
+            if (Array.isArray(idVerificacoes) && idVerificacoes.length > 0) {
+              const primeira = idVerificacoes[0] as Record<string, unknown>;
+
+              if (typeof primeira?.["document_type"] === "string") {
+                documentoTipo = primeira["document_type"];
+              }
+            }
           } catch {
             lastLivenessAt = null;
           }
@@ -316,6 +333,7 @@ export async function GET(
           didit_status: diditStatus,
           is_verified: Boolean(isVerified),
           identity_match: identityMatch,
+          documento_tipo: documentoTipo,
         };
 
         provaVida = {

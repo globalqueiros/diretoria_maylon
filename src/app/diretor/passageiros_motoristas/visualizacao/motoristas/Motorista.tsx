@@ -5,6 +5,7 @@ import {
     BadgeCheck,
     CheckCircle2,
     Clock3,
+    CreditCard,
     Edit3,
     FileText,
     Mail,
@@ -90,6 +91,7 @@ type VerificacaoDocumento = {
     didit_status?: string | null;
     is_verified?: boolean | null;
     identity_match?: unknown;
+    documento_tipo?: string | null;
 };
 
 type ProvaVida = {
@@ -212,6 +214,24 @@ function estaBloqueado(usuario: Usuario) {
 /* =========================================================
    VERIFICAÇÃO
 ========================================================= */
+
+function formatarTipoDocumento(tipo: string | null | undefined): string {
+    if (!tipo) return "—";
+
+    const mapa: Record<string, string> = {
+        "identity card": "Carteira de identidade (RG)",
+        "driving license": "Carteira de habilitação (CNH)",
+        "driver's license": "Carteira de habilitação (CNH)",
+        passport: "Passaporte",
+        cpf: "CPF",
+        "tax id": "CPF",
+        "residence permit": "Comprovante de residência",
+        "carteira de identidade (rg)": "Carteira de identidade (RG)",
+        "carteira de habilitação (cnh)": "Carteira de habilitação (CNH)",
+    };
+
+    return mapa[tipo.trim().toLowerCase()] ?? tipo;
+}
 
 function StatusBadgeVerificacao({
     status,
@@ -833,6 +853,23 @@ export default function MotoristaPage({
                                                 : "Não"
                                         }`}
                                     />
+
+                                    {verificacao.documento.documento_tipo && (
+                                        <div className="flex min-w-0 items-center gap-3 sm:col-span-2">
+
+                                            <span className="shrink-0 text-gray-400">
+                                                <CreditCard size={16} />
+                                            </span>
+
+                                            <span className="truncate text-sm text-gray-700">
+                                                Tipo de documento:{" "}
+                                                {formatarTipoDocumento(
+                                                    verificacao.documento.documento_tipo
+                                                )}
+                                            </span>
+
+                                        </div>
+                                    )}
 
                                 </div>
 
