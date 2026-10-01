@@ -93,11 +93,12 @@ async function buscarRifa(id: number) {
     if (numeros.length === 0 && total > 0) {
       numerosFinais = Array.from(
         { length: total },
-        (_, index) => ({
+        (_, index): RifaNumero => ({
           id: index + 1,
           numero: index + 1,
           nome_cliente: null,
-          status: "disponivel" as const,
+          telefone: null,
+          status: "disponivel",
         })
       );
     }
