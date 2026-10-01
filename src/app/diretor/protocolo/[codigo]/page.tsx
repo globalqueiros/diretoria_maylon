@@ -1,6 +1,6 @@
-import { db } from "../../../../lib/db";
-import Sidebar from "../../../../components/sidebar";
-import Header from "../../../../components/header";
+import { db } from "../../../lib/db";
+import Sidebar from "../../../components/sidebar";
+import Header from "../../../components/header";
 
 export default async function Protocolo({ params }: any) {
   const { codigo } = await params;
