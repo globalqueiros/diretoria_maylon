@@ -49,6 +49,12 @@ export function provaVidaDevida(
   lastLivenessAt: string | Date | null | undefined,
   agora: Date = new Date()
 ): boolean {
+  // Sem nenhuma prova de vida registrada → sempre devida
+  if (!lastLivenessAt) return true;
+
+  const ultimaProva = new Date(lastLivenessAt);
+  if (isNaN(ultimaProva.getTime())) return true;
+
   if (!created_at) return false;
 
   const criacao = new Date(created_at);
@@ -70,11 +76,6 @@ export function provaVidaDevida(
   if (ultimoAniversario > agora) {
     ultimoAniversario.setFullYear(ultimoAniversario.getFullYear() - 1);
   }
-
-  if (!lastLivenessAt) return true;
-
-  const ultimaProva = new Date(lastLivenessAt);
-  if (isNaN(ultimaProva.getTime())) return true;
 
   return ultimaProva < ultimoAniversario;
 }
