@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import VLibras from "./components/vlibras";
 import AuthGuard from "./components/authguard";
 
 export const metadata: Metadata = {
@@ -18,7 +17,6 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body>
         <AuthGuard>{children}</AuthGuard>
-        <VLibras />
         <GoogleAnalytics gaId="G-4R88G65G1X" />
       </body>
     </html>
