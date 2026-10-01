@@ -11,6 +11,12 @@ declare global {
   }
 }
 
+type VLibrasDivProps = React.HTMLAttributes<HTMLDivElement> & {
+  vw?: string;
+  "vw-access-button"?: string;
+  "vw-plugin-wrapper"?: string;
+};
+
 export default function VLibras() {
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
