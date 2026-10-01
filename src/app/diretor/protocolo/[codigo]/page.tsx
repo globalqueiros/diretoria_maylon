@@ -1,9 +1,8 @@
-import { db } from "../../lib/db";
-import Sidebar from "../../components/sidebar";
-import Header from "../../components/header";
+import { db } from "../../../../lib/db";
+import Sidebar from "../../../../components/sidebar";
+import Header from "../../../../components/header";
 
 export default async function Protocolo({ params }: any) {
-  // ✅ CORRETO
   const { codigo } = await params;
 
   const codigoLimpo = decodeURIComponent(codigo).trim();
@@ -32,15 +31,16 @@ export default async function Protocolo({ params }: any) {
     <div className="flex min-h-screen">
       <Sidebar collapsed={false} />
 
-      <div className="flex flex-col flex-1">
-        {/* ✅ função válida */}
+      <div className="flex flex-1 flex-col">
         <Header toggleSidebar={() => {}} />
 
-        <main className="p-6 bg-gray-50 min-h-screen">
-          <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow">
-            <h1 className="text-xl font-bold">{protocolo.assunto}</h1>
+        <main className="min-h-screen bg-gray-50 p-6">
+          <div className="mx-auto max-w-2xl rounded-xl bg-white p-6 shadow">
+            <h1 className="text-xl font-bold">
+              {protocolo.assunto}
+            </h1>
 
-            <p className="text-sm text-gray-500 mb-2">
+            <p className="mb-2 text-sm text-gray-500">
               Código: {protocolo.codigo}
             </p>
 
@@ -53,7 +53,10 @@ export default async function Protocolo({ params }: any) {
 
             <div className="mt-4 space-y-2">
               {mensagens.map((msg: any) => (
-                <div key={msg.id} className="p-3 bg-gray-100 rounded-lg">
+                <div
+                  key={msg.id}
+                  className="rounded-lg bg-gray-100 p-3"
+                >
                   <strong>{msg.remetente}</strong>: {msg.mensagem}
                 </div>
               ))}
