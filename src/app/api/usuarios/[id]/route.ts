@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { db2 } from "../../../lib/db";
+import {
+  IDENTITY_MATCH_KEY,
+  LAST_LIVENESS_KEY,
+  mapearStatusDidit,
+  provaVidaDevida,
+} from "../../../lib/didit";
 
 type Context = {
   params: Promise<{
@@ -216,6 +222,115 @@ export async function GET(
       null;
 
     // =====================================================
+    // VERIFICAÇÃO (motorista)
+    // =====================================================
+
+    const ehMotorista = ["driver", "motorista"].some((valor) =>
+      tipo.toLowerCase().includes(valor)
+    );
+
+    let verificacaoDocumento: {
+      status: string;
+      didit_status: string | null;
+      is_verified: boolean;
+      identity_match: unknown;
+    } | null = null;
+
+    let provaVida: {
+      devida: boolean;
+      last_liveness_at: string | null;
+    } | null = null;
+
+    if (ehMotorista) {
+      try {
+        const [driverDetailsRows] = await db2.execute(
+          `
+            SELECT is_verified
+            FROM driver_details
+            WHERE user_id = ?
+            LIMIT 1
+          `,
+          [usuarioId]
+        );
+
+        const [verificacoesRows] = await db2.execute(
+          `
+            SELECT current_status, attempt_details
+            FROM driver_identity_verifications
+            WHERE driver_id = ?
+            ORDER BY updated_at DESC
+            LIMIT 1
+          `,
+          [usuarioId]
+        );
+
+        const driverDetails = driverDetailsRows as Record<string, unknown>[];
+        const verificacoes = verificacoesRows as Record<string, unknown>[];
+
+        const detailsRow = driverDetails[0];
+        const verifRow = verificacoes[0];
+
+        const isVerified = Number(detailsRow?.is_verified ?? 0);
+
+        const diditStatus =
+          typeof verifRow?.current_status === "string"
+            ? verifRow.current_status
+            : null;
+
+        let lastLivenessAt: string | null = null;
+        let identityMatch: unknown = null;
+
+        if (verifRow?.attempt_details) {
+          try {
+            // mysql2 pode devolver objeto OU string — tratar os dois
+            const detalhes =
+              typeof verifRow.attempt_details === "string"
+                ? JSON.parse(verifRow.attempt_details)
+                : verifRow.attempt_details;
+
+            if (
+              typeof (detalhes as Record<string, unknown>)?.[
+                LAST_LIVENESS_KEY
+              ] === "string" &&
+              (detalhes as Record<string, unknown>)[LAST_LIVENESS_KEY]
+            ) {
+              lastLivenessAt = String(
+                (detalhes as Record<string, unknown>)[LAST_LIVENESS_KEY]
+              );
+            }
+
+            if (
+              (detalhes as Record<string, unknown>)?.[IDENTITY_MATCH_KEY]
+            ) {
+              identityMatch = (detalhes as Record<string, unknown>)[
+                IDENTITY_MATCH_KEY
+              ];
+            }
+          } catch {
+            lastLivenessAt = null;
+          }
+        }
+
+        verificacaoDocumento = {
+          status: mapearStatusDidit(diditStatus, isVerified),
+          didit_status: diditStatus,
+          is_verified: Boolean(isVerified),
+          identity_match: identityMatch,
+        };
+
+        provaVida = {
+          devida: provaVidaDevida(
+            (usuario.created_at as string) ?? null,
+            lastLivenessAt
+          ),
+          last_liveness_at: lastLivenessAt,
+        };
+      } catch (dbError) {
+        console.error("erro ao consultar verificação do motorista:", dbError);
+      }
+    }
+
+    // =====================================================
     // RETORNO
     // =====================================================
 
@@ -336,6 +451,11 @@ export async function GET(
 
 
         ...usuario,
+      },
+
+      verification: {
+        documento: verificacaoDocumento,
+        prova_vida: provaVida,
       },
     });
   } catch (error) {

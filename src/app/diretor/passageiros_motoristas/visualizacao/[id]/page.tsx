@@ -80,8 +80,27 @@ type ApiResponse = {
   data?: Usuario;
   user?: Usuario;
 
+  verification?: Verificacao;
+
   error?: string;
   message?: string;
+};
+
+type VerificacaoDocumento = {
+  status?: string | null;
+  didit_status?: string | null;
+  is_verified?: boolean | null;
+  identity_match?: unknown;
+};
+
+type ProvaVida = {
+  devida?: boolean | null;
+  last_liveness_at?: string | null;
+};
+
+type Verificacao = {
+  documento?: VerificacaoDocumento | null;
+  prova_vida?: ProvaVida | null;
 };
 
 /* =========================================================
@@ -265,6 +284,11 @@ export default function VisualizacaoUsuarioClient() {
   ] = useState<Usuario | null>(null);
 
   const [
+    verificacao,
+    setVerificacao,
+  ] = useState<Verificacao | null>(null);
+
+  const [
     loading,
     setLoading,
   ] = useState(true);
@@ -346,6 +370,7 @@ export default function VisualizacaoUsuarioClient() {
         }
 
         setUsuario(encontrado);
+        setVerificacao(data.verification ?? null);
       } catch (error) {
         if (!ativo) {
           return;
@@ -492,6 +517,7 @@ export default function VisualizacaoUsuarioClient() {
     return (
       <Motorista
         usuario={usuario}
+        verificacao={verificacao}
       />
     );
   }

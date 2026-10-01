@@ -2,6 +2,7 @@
 
 import {
     ArrowLeft,
+    BadgeCheck,
     CheckCircle2,
     Clock3,
     Edit3,
@@ -13,6 +14,8 @@ import {
     Trash2,
     UserRound,
     Lock,
+    ShieldCheck,
+    AlertTriangle,
 } from "lucide-react";
 
 import { useParams, useRouter } from "next/navigation";
@@ -80,6 +83,23 @@ type ApiResponse = {
 
     error?: string;
     message?: string;
+};
+
+type VerificacaoDocumento = {
+    status?: string | null;
+    didit_status?: string | null;
+    is_verified?: boolean | null;
+    identity_match?: unknown;
+};
+
+type ProvaVida = {
+    devida?: boolean | null;
+    last_liveness_at?: string | null;
+};
+
+type Verificacao = {
+    documento?: VerificacaoDocumento | null;
+    prova_vida?: ProvaVida | null;
 };
 
 /* =========================================================
@@ -190,10 +210,62 @@ function estaBloqueado(usuario: Usuario) {
 }
 
 /* =========================================================
+   VERIFICAÇÃO
+========================================================= */
+
+function StatusBadgeVerificacao({
+    status,
+}: {
+    status?: string | null;
+}) {
+    const config: Record<
+        string,
+        { label: string; className: string }
+    > = {
+        aprovado: {
+            label: "Aprovado",
+            className: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100",
+        },
+        reprovado: {
+            label: "Reprovado",
+            className: "bg-red-50 text-red-600 ring-1 ring-red-100",
+        },
+        em_analise: {
+            label: "Em análise",
+            className: "bg-blue-50 text-blue-600 ring-1 ring-blue-100",
+        },
+        pendente: {
+            label: "Pendente",
+            className: "bg-amber-50 text-amber-600 ring-1 ring-amber-100",
+        },
+        nao_iniciado: {
+            label: "Não iniciado",
+            className: "bg-gray-100 text-gray-600 ring-1 ring-gray-200",
+        },
+    };
+
+    const atual = config[status ?? ""] ?? config.nao_iniciado;
+
+    return (
+        <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${atual.className}`}
+        >
+            {atual.label}
+        </span>
+    );
+}
+
+/* =========================================================
    PÁGINA
 ========================================================= */
 
-export default function MotoristaPage() {
+export default function MotoristaPage({
+    usuario: usuarioProp,
+    verificacao = null,
+}: {
+    usuario?: Usuario | null;
+    verificacao?: Verificacao | null;
+}) {
     const params = useParams();
     const router = useRouter();
 
@@ -202,7 +274,7 @@ export default function MotoristaPage() {
         : String(params?.id ?? "");
 
     const [usuario, setUsuario] =
-        useState<Usuario | null>(null);
+        useState<Usuario | null>(usuarioProp ?? null);
 
     const [loading, setLoading] =
         useState(true);
@@ -713,6 +785,111 @@ export default function MotoristaPage() {
                     </div>
 
                 </div>
+
+            </section>
+
+            {/* VERIFICAÇÃO */}
+
+            <section className="mx-auto mt-6 w-full max-w-[1536px] rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+
+                <Title
+                    icon={<ShieldCheck size={19} />}
+                    title="Verificação"
+                />
+
+                {verificacao?.documento || verificacao?.prova_vida ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                        {verificacao.documento && (
+                            <div className="rounded-xl border border-gray-200 p-5">
+
+                                <div className="mb-4 flex items-center justify-between gap-3">
+
+                                    <span className="text-sm font-semibold text-gray-900">
+                                        Documento
+                                    </span>
+
+                                    <StatusBadgeVerificacao
+                                        status={verificacao.documento.status}
+                                    />
+
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3 text-sm text-gray-700 sm:grid-cols-2">
+
+                                    <InfoLine
+                                        icon={<FileText size={16} />}
+                                        value={`Didit: ${
+                                            verificacao.documento.didit_status ||
+                                            "—"
+                                        }`}
+                                    />
+
+                                    <InfoLine
+                                        icon={<BadgeCheck size={16} />}
+                                        value={`Verificado: ${
+                                            verificacao.documento.is_verified
+                                                ? "Sim"
+                                                : "Não"
+                                        }`}
+                                    />
+
+                                </div>
+
+                            </div>
+                        )}
+
+                        {verificacao.prova_vida && (
+                            <div className="rounded-xl border border-gray-200 p-5">
+
+                                <div className="mb-4 flex items-center justify-between gap-3">
+
+                                    <span className="text-sm font-semibold text-gray-900">
+                                        Prova de vida
+                                    </span>
+
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                                            verificacao.prova_vida.devida
+                                                ? "bg-red-50 text-red-600 ring-1 ring-red-100"
+                                                : "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"
+                                        }`}
+                                    >
+                                        {verificacao.prova_vida.devida ? (
+                                            <>
+                                                <AlertTriangle size={13} />
+                                                Devida
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle2 size={13} />
+                                                Em dia
+                                            </>
+                                        )}
+                                    </span>
+
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3 text-sm text-gray-700">
+
+                                    <InfoLine
+                                        icon={<Clock3 size={16} />}
+                                        value={`Última prova: ${formatarData(
+                                            verificacao.prova_vida.last_liveness_at
+                                        )}`}
+                                    />
+
+                                </div>
+
+                            </div>
+                        )}
+
+                    </div>
+                ) : (
+                    <p className="text-sm text-gray-500">
+                        Nenhuma verificação cadastrada para este motorista.
+                    </p>
+                )}
 
             </section>
 
