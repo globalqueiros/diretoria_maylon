@@ -29,9 +29,12 @@ import {
   LocateFixed,
   Megaphone,
   BadgeCheck,
+<<<<<<< HEAD
   CreditCardMinus,
   IdCard,
   ClipboardList,
+=======
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSlack } from "@fortawesome/free-brands-svg-icons";
@@ -91,6 +94,7 @@ const menuAtendente: MenuItem[] = [
     href: "/atendente/atendimentos",
   },
   {
+<<<<<<< HEAD
     name: "Protocolos",
     icon: ClipboardList,
     href: "/atendente/protocolos",
@@ -98,6 +102,10 @@ const menuAtendente: MenuItem[] = [
   {
     name: "Passageiros",
     icon: UserIcon,
+=======
+    name: "Passageiros",
+    icon: Car,
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
     href: "/atendente/passageiros",
   },
   {
@@ -116,6 +124,7 @@ const menuAtendente: MenuItem[] = [
     href: "/atendente/corridas",
   },
   {
+<<<<<<< HEAD
     name: "Pagamentos",
     icon: CreditCardMinus,
     href: "/atendente/pagamentos",
@@ -134,6 +143,21 @@ const menuAtendente: MenuItem[] = [
     name: "Meu Perfil",
     icon: UserIcon,
     href: "/atendente/perfil",
+=======
+    name: "Financeiro",
+    icon: Wallet,
+    href: "/atendente/financeiro",
+  },
+  {
+    name: "Relatórios",
+    icon: FileText,
+    href: "/atendente/relatorio",
+  },
+  {
+    name: "Notificações",
+    icon: Megaphone,
+    href: "/atendente/notificacoes",
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
   },
   {
     name: "Sair",
@@ -142,7 +166,10 @@ const menuAtendente: MenuItem[] = [
   },
 ];
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
 const menuDiretor: MenuItem[] = [
   {
     name: "Dashboard",
@@ -356,8 +383,14 @@ export default function Sidebar({
 
   return (
     <aside
+<<<<<<< HEAD
       className={`h-screen bg-white border-r border-gray-300 transition-all duration-300 overflow-y-auto flex-shrink-0 ${collapsed ? "w-20" : "w-64"
         }`}
+=======
+      className={`h-screen bg-white border-r border-gray-300 transition-all duration-300 overflow-y-auto flex-shrink-0 ${
+        collapsed ? "w-20" : "w-64"
+      }`}
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
     >
       {collapsed ? (
         <div className="grid h-16 place-items-center border-b border-gray-200">
@@ -405,6 +438,7 @@ export default function Sidebar({
                   onClick={() =>
                     setOpenReports((previous) => !previous)
                   }
+<<<<<<< HEAD
                   className={`w-full cursor-pointer flex items-center ${collapsed
                       ? "justify-center"
                       : "justify-between"
@@ -412,6 +446,17 @@ export default function Sidebar({
                       ? "bg-teal-500 text-white shadow-md"
                       : "hover:bg-gray-100 text-gray-700"
                     }`}
+=======
+                  className={`w-full cursor-pointer flex items-center ${
+                    collapsed
+                      ? "justify-center"
+                      : "justify-between"
+                  } p-3 rounded-lg transition ${
+                    hasActiveSubmenu
+                      ? "bg-teal-500 text-white shadow-md"
+                      : "hover:bg-gray-100 text-gray-700"
+                  }`}
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
                 >
                   <div className="flex items-center gap-3">
                     <item.icon size={20} />
@@ -441,10 +486,18 @@ export default function Sidebar({
                         <Link
                           key={subItem.href}
                           href={subItem.href}
+<<<<<<< HEAD
                           className={`px-3 py-2 rounded-lg text-xs transition ${isSubActive
                               ? "bg-teal-100 text-teal-700 font-semibold"
                               : "hover:bg-gray-100 text-gray-700"
                             }`}
+=======
+                          className={`px-3 py-2 rounded-lg text-xs transition ${
+                            isSubActive
+                              ? "bg-teal-100 text-teal-700 font-semibold"
+                              : "hover:bg-gray-100 text-gray-700"
+                          }`}
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
                         >
                           {subItem.name}
                         </Link>
@@ -464,6 +517,7 @@ export default function Sidebar({
             <Link
               key={item.name}
               href={item.href}
+<<<<<<< HEAD
               className={`flex items-center ${collapsed
                   ? "justify-center"
                   : "justify-start"
@@ -471,6 +525,17 @@ export default function Sidebar({
                   ? "bg-teal-500 text-white shadow-md"
                   : "hover:bg-gray-100 text-gray-700"
                 }`}
+=======
+              className={`flex items-center ${
+                collapsed
+                  ? "justify-center"
+                  : "justify-start"
+              } gap-3 p-3 rounded-lg transition mb-1 ${
+                isActive
+                  ? "bg-teal-500 text-white shadow-md"
+                  : "hover:bg-gray-100 text-gray-700"
+              }`}
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
             >
               <item.icon size={20} />
               {!collapsed && (
@@ -500,6 +565,7 @@ export default function Sidebar({
               <Link
                 key={item.name}
                 href={item.href}
+<<<<<<< HEAD
                 className={`flex items-center ${collapsed
                     ? "justify-center"
                     : "justify-start"
@@ -507,6 +573,17 @@ export default function Sidebar({
                     ? "bg-teal-500 text-white shadow-md"
                     : "hover:bg-gray-100 text-gray-700"
                   }`}
+=======
+                className={`flex items-center ${
+                  collapsed
+                    ? "justify-center"
+                    : "justify-start"
+                } gap-3 p-3 rounded-lg transition mb-1 ${
+                  isActive
+                    ? "bg-teal-500 text-white shadow-md"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
               >
                 <Headset size={20} />
                 {!collapsed && (

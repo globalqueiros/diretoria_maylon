@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import Link from "next/link";
@@ -1219,3 +1220,28 @@ function DocumentCard({
     </div>
   );
 }
+=======
+type PageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export default async function MotoristaPage({
+  params,
+}: PageProps) {
+  const { id } = await params;
+
+  return (
+    <main className="p-6">
+      <h1 className="text-2xl font-bold text-slate-900">
+        Motorista
+      </h1>
+
+      <p className="mt-2 text-slate-600">
+        ID: {id}
+      </p>
+    </main>
+  );
+}
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
