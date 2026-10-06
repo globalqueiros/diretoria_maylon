@@ -9,7 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+<<<<<<< HEAD
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
+=======
     "@aws-sdk/client-s3": "^3.1138.0",
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
     "@fortawesome/free-brands-svg-icons": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
@@ -22,10 +27,19 @@
     "facebook-nodejs-business-sdk": "^24.0.1",
     "framer-motion": "^12.42.2",
     "jsonwebtoken": "^9.0.3",
+<<<<<<< HEAD
+    "jspdf": "^4.2.1",
+    "lucide-react": "^1.26.0",
+    "mysql2": "^3.24.5",
+    "next": "^16.2.11",
+    "nodemailer": "^9.0.3",
+    "pdf-lib": "^1.17.1",
+=======
     "lucide-react": "^1.26.0",
     "mysql2": "^3.23.1",
     "next": "^16.2.11",
     "nodemailer": "^9.0.3",
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -36,7 +50,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
+<<<<<<< HEAD
+    "eslint-config-next": "^14.2.35",
+=======
     "eslint-config-next": "16.2.11",
+>>>>>>> 329b250dda240af642406b1a722be799da19c6d1
     "tailwindcss": "^4",
     "typescript": "^5"
   }
