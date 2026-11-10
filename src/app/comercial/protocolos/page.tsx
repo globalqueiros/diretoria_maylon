@@ -121,7 +121,7 @@ export default function ProtocolosPage() {
   }, [protocolos, busca, status, prioridade, tipo]);
 
   function abrirDetalhes(id: number) {
-    router.push(`/atendente/protocolos/${id}`);
+    router.push(`/comercial/protocolos/${id}`);
   }
 
   return (
@@ -149,7 +149,7 @@ export default function ProtocolosPage() {
 
         <button
           type="button"
-          onClick={() => window.location.assign("/atendente/protocolos/novo")}
+          onClick={() => window.location.assign("/comercial/protocolos/novo")}
           className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           <Plus className="h-4 w-4" />

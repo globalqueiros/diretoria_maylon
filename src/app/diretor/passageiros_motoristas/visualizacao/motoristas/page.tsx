@@ -239,6 +239,14 @@ export default function Motorista({ usuario, verificacao }: MotoristaProps) {
   const router = useRouter();
   const [aba, setAba] = useState<Aba>("geral");
 
+  if (!usuario) {
+    return (
+      <main className="min-h-screen p-6 text-sm text-slate-600">
+        Selecione um motorista em Passageiros e Motoristas para visualizar os detalhes.
+      </main>
+    );
+  }
+
   const nome = getNome(usuario);
   const bloqueado = estaBloqueado(usuario);
   const avaliacao = getAvaliacao(usuario);

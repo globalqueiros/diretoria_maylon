@@ -1,43 +1,46 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { db2 } from "../../lib/db";
+import { exigirPerfilNaApi } from "../../lib/roles";
 
 const CATEGORIAS = ["beneficio", "corrida", "pagamento", "cadastro", "entrega", "outro"];
 const PRIORIDADES = ["baixa", "media", "alta"];
 
 function gerarNumero() {
-  return `ATD-${Date.now()}-${String(Math.floor(Math.random() * 100)).padStart(2, "0")}`;
+  return `ATD-${Date.now().toString(36).toUpperCase()}`;
+}
+
+async function colunasDe(tabela: string) {
+  const [cols] = await db2.query<RowDataPacket[]>(
+    `SHOW COLUMNS FROM \`${tabela}\``
+  );
+  return new Set(cols.map((c) => String(c.Field)));
 }
 
 export async function POST(req: Request) {
-  // Autenticação pelo cookie access_token
-  const token = (await cookies()).get("access_token")?.value;
-  let matricula: string | null = null;
-  try {
-    const payload = jwt.verify(token ?? "", process.env.JWT_SECRET!) as { matricula?: string };
-    matricula = payload.matricula ?? null;
-  } catch {
-    return NextResponse.json({ erro: "Sessão expirada. Entre novamente." }, { status: 401 });
+  const auth = await exigirPerfilNaApi(["comercial", "gerente", "atendente", "diretor"]);
+
+  if (!auth.ok) {
+    return NextResponse.json({ erro: auth.error }, { status: auth.status });
   }
 
-  let b: Record<string, unknown>;
+  let body: Record<string, unknown>;
+
   try {
-    b = await req.json();
+    body = await req.json();
   } catch {
     return NextResponse.json({ erro: "Requisição inválida." }, { status: 400 });
   }
 
-  const solicitante_id = String(b.solicitante_id ?? "");
-  const solicitante_tipo = b.solicitante_tipo === "motorista" ? "motorista" : "passageiro";
-  const assunto = String(b.assunto ?? "").trim();
-  const categoria = String(b.categoria ?? "");
-  const prioridade = String(b.prioridade ?? "media");
-  const descricao = String(b.descricao ?? "").trim();
+  const solicitanteId = String(body.solicitante_id ?? "").trim();
+  const solicitanteTipo = body.solicitante_tipo === "motorista" ? "motorista" : "passageiro";
+  const assunto = String(body.assunto ?? "").trim();
+  const categoria = String(body.categoria ?? "");
+  const prioridade = String(body.prioridade ?? "media");
+  const descricao = String(body.descricao ?? "").trim();
 
   if (
-    !solicitante_id ||
+    !solicitanteId ||
     assunto.length < 5 ||
     assunto.length > 150 ||
     descricao.length < 10 ||
@@ -48,15 +51,46 @@ export async function POST(req: Request) {
   }
 
   try {
-    const [r] = await db2.execute<ResultSetHeader>(
-      `INSERT INTO protocolos
-         (numero, solicitante_id, solicitante_tipo, assunto, categoria, prioridade, descricao, status, atendente_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'aberto', ?)`,
-      [gerarNumero(), solicitante_id, solicitante_tipo, assunto, categoria, prioridade, descricao, matricula]
+    const [solicitantes] = await db2.query<RowDataPacket[]>(
+      `SELECT id, full_name, email FROM users WHERE id = ? LIMIT 1`,
+      [solicitanteId]
     );
-    return NextResponse.json({ id: r.insertId }, { status: 201 });
-  } catch (e) {
-    console.error("Erro ao criar protocolo:", e);
+
+    const solicitante = solicitantes[0];
+    const colunas = await colunasDe("protocolos");
+
+    const campos = ["codigo", "usuario_id", "nome", "email", "categoria", "assunto", "mensagem", "status", "atendente_id"];
+    const valores: unknown[] = [
+      gerarNumero(),
+      solicitanteId,
+      solicitante?.full_name ? String(solicitante.full_name) : solicitanteId,
+      solicitante?.email ? String(solicitante.email) : "",
+      categoria,
+      assunto,
+      descricao,
+      "aberto",
+      String(auth.usuario.id),
+    ];
+
+    if (colunas.has("prioridade")) {
+      campos.push("prioridade");
+      valores.push(prioridade);
+    }
+
+    if (colunas.has("solicitante_tipo")) {
+      campos.push("solicitante_tipo");
+      valores.push(solicitanteTipo);
+    }
+
+    const [result] = await db2.execute<ResultSetHeader>(
+      `INSERT INTO protocolos (${campos.map((c) => `\`${c}\``).join(", ")})
+       VALUES (${campos.map(() => "?").join(", ")})`,
+      valores as any[]
+    );
+
+    return NextResponse.json({ id: result.insertId }, { status: 201 });
+  } catch (error) {
+    console.error("Erro ao criar protocolo:", error);
     return NextResponse.json({ erro: "Não foi possível criar o protocolo." }, { status: 500 });
   }
 }

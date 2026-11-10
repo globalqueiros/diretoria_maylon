@@ -6,6 +6,7 @@ import type {
     RowDataPacket,
 } from "mysql2/promise";
 import { db } from "../../../../lib/db";
+import { registrarComissoesDoMaylonPass } from "../../../../lib/comissoes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -511,6 +512,15 @@ export async function PATCH(request: NextRequest, context: Contexto) {
 
         await connection.commit();
         emTransacao = false;
+
+        try {
+            await registrarComissoesDoMaylonPass(solicitacaoId);
+        } catch (erroComissao) {
+            console.error(
+                "[comissoes] erro ao gerar comissão do Maylon Pass:",
+                erroComissao
+            );
+        }
 
         return NextResponse.json({
             success: true,

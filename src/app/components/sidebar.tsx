@@ -176,6 +176,7 @@ const menuGerente: MenuItem[] = [
   { name: "Maylon Pass", icon: IdCard, href: "/gerente/maylon_pass" },
   { name: "Financeiro", icon: ChartNoAxesCombined, href: "/gerente/financeiro" },
   { name: "Comunicados", icon: Megaphone, href: "/gerente/comunicados" },
+  { name: "Perfil", icon: UserIcon, href: "/gerente/perfil" },
   { name: "Sair", icon: LogOut, href: "/saindo" },
 ];
 
@@ -209,6 +210,7 @@ const menuComercial: MenuItem[] = [
   { name: "Comunicados", icon: Mail, href: "/comercial/comunicados" },
   { name: "Comissões", icon: Wallet, href: "/comercial/comissoes" },
   { name: "Atendimentos", icon: MessageCircleMore, href: "/comercial/atendimentos" },
+  { name: "Perfil", icon: UserIcon, href: "/comercial/perfil" },
   { name: "Sair", icon: LogOut, href: "/saindo" },
 ];
 

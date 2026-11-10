@@ -47,7 +47,9 @@ export async function listarEmails() {
     const lock = await client.getMailboxLock("INBOX");
 
     try {
-      const total = client.mailbox?.exists ?? 0;
+      const mailbox = client.mailbox;
+      const total =
+        mailbox && typeof mailbox === "object" ? mailbox.exists ?? 0 : 0;
 
       if (!total) return [];
 
@@ -73,7 +75,7 @@ export async function listarEmails() {
           assunto: parsed.subject || "(Sem assunto)",
           remetente:
             parsed.from?.text || "Remetente desconhecido",
-          destinatario: parsed.to?.text || "",
+          destinatario: (Array.isArray(parsed.to) ? parsed.to[0]?.text : parsed.to?.text) || "",
           data: parsed.date?.toISOString() || null,
           texto: (parsed.text || "").slice(0, 20000),
           lido: msg.flags.has("\\Seen"),

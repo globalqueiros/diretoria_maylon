@@ -15,7 +15,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-const ROTA_LISTA = "/atendente/protocolos";
+const ROTA_LISTA = "/comercial/protocolos";
 
 type Evento = {
   id: number;

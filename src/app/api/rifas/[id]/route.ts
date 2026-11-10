@@ -33,7 +33,7 @@ export async function DELETE(
     connection = await db.getConnection();
     await connection.beginTransaction();
 
-    const [rifas] = await connection.query<RifaRow[]>(
+    const [rifas] = await connection.query(
       `
       SELECT id
       FROM rifas
@@ -56,7 +56,7 @@ export async function DELETE(
     }
 
     const [resultado] =
-      await connection.query<ResultSetHeader>(
+      await connection.query(
         `
         DELETE FROM rifas
         WHERE id = ?

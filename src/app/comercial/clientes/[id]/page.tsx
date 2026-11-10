@@ -309,7 +309,7 @@ export default function DetalhesCliente() {
                 Tentar novamente
               </button>
               <Link
-                href="/clientes"
+                href="/comercial/clientes"
                 className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50"
               >
                 Voltar para clientes

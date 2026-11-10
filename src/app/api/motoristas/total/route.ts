@@ -15,13 +15,13 @@ export async function GET(request: NextRequest) {
     const [rows] = await db2.query<RowDataPacket[]>(
       `SELECT COUNT(*) AS total
        FROM users
-       WHERE user_type = ? AND is_active = ? AND manager_id = ?`,
+       WHERE user_type = ? AND is_active = ? AND gerente = ?`,
       ["driver", 1, gerenteId]
     );
 
     return NextResponse.json({ total: Number(rows[0].total) });
   } catch (error) {
-    console.error("Erro em /api/atendente/motoristas/total:", error);
+    console.error("Erro em /api/motoristas/total:", error);
     return NextResponse.json(
       { error: "Erro ao buscar total de motoristas" },
       { status: 500 }

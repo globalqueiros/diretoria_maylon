@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { db } from "../lib/db";
-import { tokenAtual, validarSessao } from "./sessaoServidor";
+import { tokenAtual, validarSessao } from "./session";
 import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
 type AuthUser = {

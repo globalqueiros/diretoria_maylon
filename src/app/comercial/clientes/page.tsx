@@ -21,7 +21,8 @@ type Cliente = {
     email: string | null;
     telefone: string | null;
     cidade: string | null;
-    status: "Ativo" | "Inativo";
+    status: number;
+    criado_em?: string | null;
 };
 
 export default function ClientesPage() {
@@ -60,13 +61,15 @@ export default function ClientesPage() {
     }, []);
 
     // INDICADORES
-    const ativos = clientes.filter(
-        (c) => c.status === "Ativo"
-    ).length;
+    const ativos = clientes.filter((c) => Number(c.status) === 0).length;
 
-    const inativos = clientes.filter(
-        (c) => c.status === "Inativo"
-    ).length;
+    const inativos = clientes.length - ativos;
+
+    const novos = clientes.filter((c) => {
+        if (!c.criado_em) return false;
+        const data = new Date(c.criado_em).getTime();
+        return Number.isFinite(data) && data >= Date.now() - 30 * 24 * 60 * 60 * 1000;
+    }).length;
 
     const filtrados = clientes.filter((c) =>
         `${c.numero} ${c.nome} ${c.email || ""} ${c.telefone || ""} ${c.cidade || ""}`
@@ -103,9 +106,7 @@ export default function ClientesPage() {
 
                 <Card
                     titulo="NOVOS CLIENTES"
-                    valor={clientes.filter((c) => {
-                        return false;
-                    }).length}
+                    valor={novos}
                     icon={<UserPlus size={21} />}
                     cor="blue"
                 />

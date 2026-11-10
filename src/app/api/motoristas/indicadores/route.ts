@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
       `SELECT
          SUM(is_active = 0) AS pendentes,
          SUM(DATE(created_at) = CURDATE()) AS enviados_hoje,
-         SUM(is_active = 1 AND DATE(approved_at) = CURDATE()) AS aprovados_hoje,
+         SUM(is_active = 1 AND DATE(updated_at) = CURDATE()) AS aprovados_hoje,
          SUM(is_active = 1
-             AND YEAR(approved_at) = YEAR(CURDATE())
-             AND MONTH(approved_at) = MONTH(CURDATE())) AS aprovados_mes
+             AND YEAR(updated_at) = YEAR(CURDATE())
+             AND MONTH(updated_at) = MONTH(CURDATE())) AS aprovados_mes
        FROM users
-       WHERE user_type = ? AND manager_id = ?`,
+       WHERE user_type = ? AND gerente = ?`,
       ["driver", gerenteId]
     );
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       aprovadosMes: Number(r.aprovados_mes) || 0,
     });
   } catch (error) {
-    console.error("Erro em /api/atendente/motoristas/indicadores:", error);
+    console.error("Erro em /api/motoristas/indicadores:", error);
     return NextResponse.json(
       { error: "Erro ao buscar indicadores" },
       { status: 500 }
