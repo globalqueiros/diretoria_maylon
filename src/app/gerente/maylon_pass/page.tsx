@@ -90,7 +90,7 @@ export default function PainelAprovacaoMaylonPass() {
       setCarregando(true);
       setErro("");
 
-      const res = await fetch("/api/maylon-pass/solicitacoes", {
+      const res = await fetch("/api/planos/solicitacoes?escopo=gerente", {
         cache: "no-store",
       });
 
@@ -117,7 +117,7 @@ export default function PainelAprovacaoMaylonPass() {
       setProcessando(id);
       setErroModal("");
 
-      const res = await fetch(`/api/maylon-pass/solicitacoes/${id}`, {
+      const res = await fetch(`/api/planos/solicitacoes/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ decisao }),

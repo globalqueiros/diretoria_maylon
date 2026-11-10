@@ -12,7 +12,8 @@ export async function GET() {
         email,
         telefone,
         cidade,
-        status
+        status,
+        criado_em
        FROM clientes
        ORDER BY id DESC`
     );

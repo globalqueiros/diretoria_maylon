@@ -150,7 +150,7 @@ export default function MotoristasPage() {
 
       setErro(null);
 
-      const res = await fetch("/api/motoristas", {
+      const res = await fetch("/api/gerente/motoristas", {
         cache: "no-store",
         credentials: "include",
       });
@@ -468,7 +468,7 @@ export default function MotoristasPage() {
 
                         <td className="px-5 py-4 text-center">
                           <Link
-                            href={`/atendente/motoristas/${m.id}`}
+                            href={`/gerente/motoristas/${m.id}`}
                             aria-label={`Ver detalhes de ${m.full_name}`}
                             className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-teal-50 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                           >

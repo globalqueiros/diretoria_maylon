@@ -19,12 +19,17 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 /* Tipos                                                               */
 /* ------------------------------------------------------------------ */
 
-type StatusComissao = "pendente" | "aprovada" | "paga";
+type StatusComissao = "pendente" | "aprovada" | "paga" | "cancelada";
 
 interface Comissao {
     id: number;
     descricao: string;
     cidade: string;
+    produtoNome?: string;
+    origemTabela?: string;
+    criadoEm?: string;
+    valorBase?: number;
+    valorComissao?: number;
     data: string; // ISO
     valor_base: number;
     percentual: number;
@@ -74,7 +79,19 @@ const STATUS_INFO: Record<
         rotulo: "Paga",
         classe: "bg-emerald-100 text-emerald-700",
     },
+    cancelada: {
+        rotulo: "Cancelada",
+        classe: "bg-rose-100 text-rose-700",
+    },
 };
+
+function origemLabel(valor: unknown) {
+    const origem = String(valor ?? "");
+    if (origem === "vendas") return "Venda CRM";
+    if (origem === "maylon_pass_solicitacoes") return "Maylon Pass";
+    if (origem === "solicitacoes_especialista") return "Publicidade";
+    return origem || "—";
+}
 
 function formatarData(valor?: string | null) {
     if (!valor) return "—";
@@ -91,8 +108,8 @@ function chaveMes(ano: number, mes: number) {
 function baixarCSV(linhas: Comissao[], nomeArquivo: string) {
     const cabecalho = [
         "ID",
-        "Descrição",
-        "Cidade",
+        "Produto",
+        "Origem",
         "Data",
         "Valor base",
         "Percentual",
@@ -204,7 +221,7 @@ export default function ComissoesPage() {
             setErro(false);
 
             const res = await fetch(
-                `/api/atendente/comissoes?mes=${chaveMes(ano, mes)}`,
+                `/api/comercial/comissoes?referencia=${chaveMes(ano, mes)}`,
                 { cache: "no-store" }
             );
             if (!res.ok) throw new Error("Erro ao buscar comissões.");
@@ -219,13 +236,15 @@ export default function ComissoesPage() {
             setComissoes(
                 lista.map((c) => ({
                     id: Number(c.id ?? 0),
-                    descricao: String(c.descricao ?? "—"),
-                    cidade: String(c.cidade ?? "Sem cidade"),
-                    data: String(c.data ?? ""),
-                    valor_base: Number(c.valor_base ?? 0),
+                    descricao: String(c.produtoNome ?? c.descricao ?? "—"),
+                    cidade: origemLabel(c.origemTabela ?? c.cidade),
+                    data: String(c.criadoEm ?? c.data ?? ""),
+                    valor_base: Number(c.valorBase ?? c.valor_base ?? 0),
                     percentual: Number(c.percentual ?? 0),
-                    valor: Number(c.valor ?? 0),
-                    status: (c.status as StatusComissao) ?? "pendente",
+                    valor: Number(c.valorComissao ?? c.valor ?? 0),
+                    status: (["pendente", "aprovada", "paga", "cancelada"].includes(String(c.status))
+                        ? c.status
+                        : "pendente") as StatusComissao,
                 }))
             );
         } catch (error) {
@@ -296,6 +315,7 @@ export default function ComissoesPage() {
         { id: "pendente", rotulo: "Pendentes" },
         { id: "aprovada", rotulo: "Aprovadas" },
         { id: "paga", rotulo: "Pagas" },
+        { id: "cancelada", rotulo: "Canceladas" },
     ];
 
     /* ---------------------------- Render ---------------------------- */
@@ -476,10 +496,10 @@ export default function ComissoesPage() {
                                         Data
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase text-slate-700">
-                                        Descrição
+                                        Produto
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase text-slate-700">
-                                        Cidade
+                                        Origem
                                     </th>
                                     <th className="px-4 py-3 text-right text-xs font-bold uppercase text-slate-700">
                                         Valor base

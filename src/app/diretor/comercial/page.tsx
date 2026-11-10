@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
     ArrowDown,
     ArrowUp,
@@ -255,13 +256,23 @@ export default function ComercialPage() {
                     </p>
                 </div>
 
-                <button
-                    onClick={() => window.location.reload()}
-                    className="flex items-center justify-center gap-2 rounded-[10px] bg-[#00a99d] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#009990]"
-                >
-                    <RefreshCw size={17} />
-                    Atualizar
-                </button>
+                <div className="flex flex-wrap gap-2">
+                    <Link
+                        href="/diretor/comercial/comissoes"
+                        className="flex items-center justify-center gap-2 rounded-[10px] bg-white px-5 py-3 text-sm font-bold text-[#007f76] shadow-md transition hover:bg-teal-50"
+                    >
+                        <Wallet size={17} />
+                        Regras de comissão
+                    </Link>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="flex items-center justify-center gap-2 rounded-[10px] bg-[#00a99d] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#009990]"
+                    >
+                        <RefreshCw size={17} />
+                        Atualizar
+                    </button>
+                </div>
             </header>
 
             <section className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

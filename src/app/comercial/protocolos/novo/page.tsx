@@ -129,7 +129,7 @@ export default function NovoProtocoloPage() {
         setErroGeral(j.erro ?? "Não foi possível criar o protocolo.");
         return;
       }
-      router.push(`/protocolo/${j.id}`);
+      router.push(`/comercial/protocolos/${j.id}`);
     } catch {
       setErroGeral("Sem conexão. Tente novamente.");
     } finally {
@@ -142,7 +142,7 @@ export default function NovoProtocoloPage() {
       <div className="mx-auto max-w-8xl">
         <header className="mb-6 text-white">
           <Link
-            href="/protocolos"
+            href="/comercial/protocolos"
             className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-white/90 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -329,7 +329,7 @@ export default function NovoProtocoloPage() {
                 {salvando ? "Criando..." : "Criar protocolo"}
               </button>
               <Link
-                href="/protocolos"
+                href="/comercial/protocolos"
                 className="rounded-xl border border-slate-200 px-5 py-3 text-center text-[15px] font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
               >
                 Cancelar

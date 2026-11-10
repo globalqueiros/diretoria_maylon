@@ -179,7 +179,7 @@ export default function EntregasPage() {
     setErro(null);
 
     try {
-      const res = await fetch("/api/entregas", {
+      const res = await fetch("/api/gerente/entregas", {
         method: "GET",
         cache: "no-store",
         headers: { Accept: "application/json" },
@@ -597,7 +597,7 @@ export default function EntregasPage() {
 
                       <td className="px-6 py-4 text-right">
                         <Link
-                          href={`/atendente/entregas/${e.id}`}
+                          href={`/gerente/entregas/${e.id}`}
                           aria-label={`Ver detalhes da entrega ${e.codigo}`}
                           className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
                         >
@@ -713,7 +713,7 @@ export default function EntregasPage() {
                       {dataHora(e.criado_em)}
                     </p>
                     <Link
-                      href={`/atendente/entregas/${e.id}`}
+                      href={`/gerente/entregas/${e.id}`}
                       className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
                     >
                       Ver detalhes

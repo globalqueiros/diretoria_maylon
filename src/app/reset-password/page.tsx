@@ -1,10 +1,10 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EyeOff, Eye } from "lucide-react";
 
-export default function ResetForm() {
+function ResetForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -182,5 +182,12 @@ export default function ResetForm() {
         </button>
       </div>
     </div>
+  );
+}
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-slate-500">Carregando...</div>}>
+      <ResetForm />
+    </Suspense>
   );
 }

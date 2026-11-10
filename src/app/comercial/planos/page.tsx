@@ -197,7 +197,7 @@ function BadgePlano({ plano }: { plano?: string | null }) {
 function BotaoVer({ id }: { id: number | string }) {
     return (
         <Link
-            href={`/maylon-pass/${id}`}
+            href={`/comercial/planos/${id}`}
             aria-label="Ver detalhes do assinante"
             title="Ver detalhes"
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#0a9a82] hover:text-[#0a9a82] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0a9a82]"

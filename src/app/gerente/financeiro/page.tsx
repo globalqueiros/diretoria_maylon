@@ -57,7 +57,7 @@ type SecaoId =
 /* ───────────── constantes ───────────── */
 
 const POR_PAGINA = 10;
-const API = "/api/financeiro";
+const API = "/api/gerente/financeiro";
 
 const FOCO =
   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/30";
@@ -71,13 +71,9 @@ const TONS: Record<Tom, string> = {
 };
 
 const SECOES: { id: SecaoId; rotulo: string; descricao: string; icone: LucideIcon }[] = [
-  { id: "visao", rotulo: "Visão geral", descricao: "Saldo disponível, receitas, despesas, pagamentos pendentes e resumo do mês.", icone: LayoutDashboard },
-  { id: "contas", rotulo: "Contas e saldos", descricao: "Contas bancárias, caixa, extratos, entradas e saídas de dinheiro.", icone: Landmark },
-  { id: "folha", rotulo: "Folha de pagamento", descricao: "Funcionários, salários, comissões, benefícios, descontos, adiantamentos e holerites.", icone: Users },
-  { id: "pagar", rotulo: "Contas a pagar", descricao: "Fornecedores, vencimentos, despesas fixas, boletos e pagamentos programados.", icone: ArrowDownCircle },
-  { id: "receber", rotulo: "Contas a receber", descricao: "Receitas, cobranças, recebimentos pendentes e conciliação.", icone: ArrowUpCircle },
-  { id: "aprovacoes", rotulo: "Aprovações", descricao: "Solicitações de pagamento, despesas, reembolsos e adiantamentos para aprovar ou encaminhar.", icone: CheckCircle2 },
-  { id: "relatorios", rotulo: "Relatórios", descricao: "Fluxo de caixa, despesas por setor, custos da folha e resultado mensal.", icone: BarChart3 },
+  { id: "visao", rotulo: "Visão geral", descricao: "Recebimentos, comissões e pendências da sua equipe.", icone: LayoutDashboard },
+  { id: "folha", rotulo: "Folha da equipe", descricao: "Salários, comissões, benefícios e descontos dos colaboradores vinculados a você.", icone: Users },
+  { id: "aprovacoes", rotulo: "Reembolsos", descricao: "Solicitações de reembolso dos motoristas da sua carteira.", icone: CheckCircle2 },
 ];
 
 const STATUS_CLASSE: Record<string, { rotulo: string; classe: string }> = {
@@ -901,17 +897,6 @@ function FolhaPagamento() {
         { rotulo: "Descontos e adiantamentos", valor: moeda(soma(l, "descontos") + soma(l, "adiantamentos")), detalhe: "Abatidos do pagamento", icone: ArrowDownCircle, tom: "rose" },
         { rotulo: "Total líquido", valor: moeda(soma(l, "liquido")), detalhe: "A pagar aos funcionários", icone: Banknote, tom: "slate" },
       ]}
-      acoes={(l) => (
-        <a
-          href={`${API}/folha/${encodeURIComponent(String(l.id ?? ""))}/holerite`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 ${FOCO}`}
-        >
-          <FileText className="h-3.5 w-3.5" />
-          Holerite
-        </a>
-      )}
     />
   );
 }
@@ -1262,12 +1247,8 @@ export default function FinanceiroPage() {
 
       <div role="tabpanel" id={`painel-${secao}`} aria-labelledby={`aba-${secao}`}>
         {secao === "visao" && <VisaoGeral />}
-        {secao === "contas" && <ContasSaldos />}
         {secao === "folha" && <FolhaPagamento />}
-        {secao === "pagar" && <ContasPagar />}
-        {secao === "receber" && <ContasReceber />}
         {secao === "aprovacoes" && <Aprovacoes />}
-        {secao === "relatorios" && <Relatorios />}
       </div>
     </main>
   );

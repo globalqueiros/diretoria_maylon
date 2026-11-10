@@ -342,6 +342,7 @@ export default function NovoPlanoMaylonPassPage() {
                 : `Solicitação enviada ao gerente. ${nomeUsuario} será cadastrado e o plano ${PLANOS[planoNovo].label} criado quando o gerente aprovar.`;
 
             // Mostra o aviso e deixa a tela pronta para uma nova solicitação
+            sessionStorage.setItem("maylon-pass:alerta", mensagem);
             setAlerta({ texto: mensagem });
             setPasso(1);
             setUsuarioSel(null);

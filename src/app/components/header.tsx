@@ -60,6 +60,7 @@ type Notification = {
 
 type HeaderProps = {
   onMenuClick?: () => void;
+  toggleSidebar?: () => void;
 };
 
 // ============================================
@@ -126,7 +127,7 @@ function formatNotificationDate(date?: string) {
 // COMPONENTE PRINCIPAL
 // ============================================
 
-export default function Header({ onMenuClick }: HeaderProps) {
+export default function Header({ onMenuClick, toggleSidebar }: HeaderProps) {
   const pathname = usePathname();
 
   const [user, setUser] = useState<UserData | null>(null);
@@ -506,7 +507,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         <button
           type="button"
-          onClick={onMenuClick}
+          onClick={onMenuClick ?? toggleSidebar}
           aria-label="Abrir ou recolher menu"
           aria-controls="sidebar"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-600 transition hover:bg-[#e5f5ef] hover:text-[#27876d] focus:outline-none focus:ring-2 focus:ring-[#35a989]"

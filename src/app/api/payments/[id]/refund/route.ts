@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { RefundError, requestRefund } from "@/lib/payments";
-import { REFUND_REASONS } from "@/lib/payment-types";
+import { RefundError, requestRefund } from "../../../../lib/payments";
+import { REFUND_REASONS } from "../../../../lib/payment-types";
 
 // Next.js 16: params é uma Promise
 export async function POST(
