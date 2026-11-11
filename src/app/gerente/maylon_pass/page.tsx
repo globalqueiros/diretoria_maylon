@@ -27,6 +27,7 @@ type Solicitacao = {
 };
 
 type Status = Solicitacao["status"];
+type Filtro = "todas" | Status;
 
 const moeda = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -75,7 +76,7 @@ function formatarData(valor?: string) {
 
 export default function PainelAprovacaoMaylonPass() {
   const [lista, setLista] = useState<Solicitacao[]>([]);
-  const [filtro, setFiltro] = useState<Status>("pendente");
+  const [filtro, setFiltro] = useState<Filtro>("todas");
   const [carregando, setCarregando] = useState(true);
   const [processando, setProcessando] = useState<number | null>(null);
   const [erro, setErro] = useState("");
@@ -98,8 +99,8 @@ export default function PainelAprovacaoMaylonPass() {
 
       const data = await res.json();
       setLista(data.solicitacoes || []);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : "Erro ao carregar solicitações.");
     } finally {
       setCarregando(false);
     }
@@ -132,8 +133,8 @@ export default function PainelAprovacaoMaylonPass() {
       setSelecionada(null);
       setConfirmando(null);
       await carregar();
-    } catch (e: any) {
-      setErroModal(e.message);
+    } catch (e: unknown) {
+      setErroModal(e instanceof Error ? e.message : "Não foi possível processar.");
     } finally {
       setProcessando(null);
     }
@@ -162,22 +163,36 @@ export default function PainelAprovacaoMaylonPass() {
   }, [selecionada, processando]);
 
   useEffect(() => {
-    carregar();
+    const timer = setTimeout(() => {
+      void carregar();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const contagem: Record<Status, number> = {
+  const contagem: Record<Filtro, number> = {
+    todas: lista.length,
     pendente: lista.filter((x) => x.status === "pendente").length,
     aprovado: lista.filter((x) => x.status === "aprovado").length,
     recusado: lista.filter((x) => x.status === "recusado").length,
   };
 
-  const filtradas = lista.filter((item) => item.status === filtro);
+  const filtradas =
+    filtro === "todas"
+      ? lista
+      : lista.filter((item) => item.status === filtro);
 
-  const resumo: { titulo: string; status: Status }[] = [
+  const resumo: { titulo: string; status: Filtro }[] = [
+    { titulo: "Todas", status: "todas" },
     { titulo: "Pendentes", status: "pendente" },
     { titulo: "Aprovados", status: "aprovado" },
     { titulo: "Recusados", status: "recusado" },
   ];
+
+  const tituloLista =
+    filtro === "todas"
+      ? "Todas as solicitações"
+      : `Solicitações ${STATUS_ESTILO[filtro].label.toLowerCase()}s`;
 
   return (
     <main className="min-h-screen">
@@ -204,7 +219,7 @@ export default function PainelAprovacaoMaylonPass() {
           </button>
         </header>
 
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {resumo.map(({ titulo, status }) => (
             <button
               key={status}
@@ -236,7 +251,7 @@ export default function PainelAprovacaoMaylonPass() {
         <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
           <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <h2 className="text-base font-extrabold text-slate-900">
-              Solicitações {STATUS_ESTILO[filtro].label.toLowerCase()}s
+              {tituloLista}
             </h2>
             <span className="text-xs font-semibold text-slate-500">
               {filtradas.length}{" "}
@@ -282,8 +297,18 @@ export default function PainelAprovacaoMaylonPass() {
                     >
                       <Clock className="mx-auto text-slate-300" size={36} />
                       <p className="mt-3 font-bold text-slate-700">
-                        Nenhuma solicitação encontrada.
+                        {filtro === "todas"
+                          ? "Nenhuma solicitação encontrada."
+                          : `Nenhuma solicitação ${STATUS_ESTILO[filtro].label.toLowerCase()}.`}
                       </p>
+                      {filtro !== "todas" && (
+                        <button
+                          onClick={() => setFiltro("todas")}
+                          className="mt-4 cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-teal-700 transition hover:bg-teal-50"
+                        >
+                          Ver todas
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ) : (
