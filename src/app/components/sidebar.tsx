@@ -203,7 +203,10 @@ const menuComercial: MenuItem[] = [
   { name: "Dashboard", icon: Home, href: "/comercial" },
   { name: "Clientes", icon: UserIcon, href: "/comercial/clientes" },
   { name: "Leads Comerciais", icon: Users, href: "/comercial/leads" },
+<<<<<<< HEAD
   { name: "Comercial", icon: BriefcaseBusiness, href: "/comercial/comercial" },
+=======
+>>>>>>> 3c33fa5e4eea6bce3246b41ed7c81b6cd5e28a53
   { name: "CRM", icon: BriefcaseBusiness, href: "/comercial/crm" },
   { name: "Planos e Assinaturas", icon: IdCard, href: "/comercial/planos" },
   { name: "Campanhas", icon: Megaphone, href: "/comercial/campanhas" },

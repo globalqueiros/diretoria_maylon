@@ -126,7 +126,11 @@ export default function CrmComercialPage() {
   const visibleStages = STAGES.filter(stage => stage !== "Ganho" && stage !== "Perdido");
 
   return (
+<<<<<<< HEAD
     <main className="min-h-screen text-slate-800">
+=======
+    <main className="min-h-screen p-4 text-slate-800">
+>>>>>>> 3c33fa5e4eea6bce3246b41ed7c81b6cd5e28a53
       <div className="mx-auto max-w-8xl space-y-6">
         <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
