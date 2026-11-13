@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 import { db } from "../../../../lib/db";
 import { exigirPerfilNaApi } from "../../../../lib/roles";
 import { sincronizarComissaoDaVenda } from "../../../../lib/comissoes";
@@ -41,16 +42,27 @@ export async function PATCH(
       return NextResponse.json({ error: "Etapa inválida." }, { status: 400 });
     }
 
+    const status = STATUS_POR_STAGE[stage];
+
     const [result] = await db.execute(
-      `UPDATE vendas SET status = ? WHERE id = ? LIMIT 1`,
-      [STATUS_POR_STAGE[stage], vendaId]
+      `UPDATE vendas
+          SET crm_stage = ?, status = ?, crm_atualizado_em = NOW()
+        WHERE id = ? LIMIT 1`,
+      [stage, status, vendaId]
     );
 
     if ((result as { affectedRows: number }).affectedRows === 0) {
-      return NextResponse.json({ error: "Oportunidade não encontrada." }, { status: 404 });
+      const [existe] = await db.query<RowDataPacket[]>(
+        `SELECT 1 FROM vendas WHERE id = ? LIMIT 1`,
+        [vendaId]
+      );
+
+      if (!existe.length) {
+        return NextResponse.json({ error: "Oportunidade não encontrada." }, { status: 404 });
+      }
     }
 
-    await sincronizarComissaoDaVenda(vendaId, STATUS_POR_STAGE[stage]);
+    await sincronizarComissaoDaVenda(vendaId, status);
 
     return NextResponse.json({ success: true });
   } catch (error) {

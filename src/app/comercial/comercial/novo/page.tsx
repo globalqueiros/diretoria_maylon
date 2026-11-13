@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 /* ------------------------------------------------------------------ */
@@ -144,7 +145,7 @@ export default function CotacaoPage() {
     e.preventDefault();
     setStatus("enviando");
     try {
-      const res = await fetch("/api/cotacao", {
+      const res = await fetch("/api/comercial/cotacoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -381,6 +382,12 @@ export default function CotacaoPage() {
                       </>
                     )}
                   </p>
+                  <Link
+                    href="/comercial/comercial"
+                    className="mt-3 inline-flex rounded-lg bg-[#35aa8a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2c937a]"
+                  >
+                    Ver minhas cotações
+                  </Link>
                 </div>
               ) : (
                 <form onSubmit={enviar} className="space-y-3">

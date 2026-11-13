@@ -172,6 +172,7 @@ const menuGerente: MenuItem[] = [
   { name: "Motoristas", icon: Car, href: "/gerente/motoristas" },
   { name: "Entregas", icon: PackageOpen, href: "/gerente/entregas" },
   { name: "Comissões e bonificações", icon: Wallet, href: "/gerente/comissao_bonificacoes" },
+  { name: "Cotações de publicidade", icon: Megaphone, href: "/gerente/cotacoes" },
   { name: "Pagamentos", icon: CreditCardMinus, href: "/gerente/pagamentos" },
   { name: "Maylon Pass", icon: IdCard, href: "/gerente/maylon_pass" },
   { name: "Financeiro", icon: ChartNoAxesCombined, href: "/gerente/financeiro" },
@@ -203,10 +204,7 @@ const menuComercial: MenuItem[] = [
   { name: "Dashboard", icon: Home, href: "/comercial" },
   { name: "Clientes", icon: UserIcon, href: "/comercial/clientes" },
   { name: "Leads Comerciais", icon: Users, href: "/comercial/leads" },
-<<<<<<< HEAD
   { name: "Comercial", icon: BriefcaseBusiness, href: "/comercial/comercial" },
-=======
->>>>>>> 3c33fa5e4eea6bce3246b41ed7c81b6cd5e28a53
   { name: "CRM", icon: BriefcaseBusiness, href: "/comercial/crm" },
   { name: "Planos e Assinaturas", icon: IdCard, href: "/comercial/planos" },
   { name: "Campanhas", icon: Megaphone, href: "/comercial/campanhas" },

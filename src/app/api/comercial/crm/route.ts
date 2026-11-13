@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     const [rows] = await db.query<RowDataPacket[]>(
       `SELECT v.id, v.cliente_id, v.promotor_id, v.total, v.forma_pagamento,
-              v.produto_chave, v.status, v.criado_em, c.nome, c.email, c.telefone, c.cidade,
+              v.produto_chave, v.status, v.crm_stage, v.criado_em, c.nome, c.email, c.telefone, c.cidade,
               u.full_name AS responsavel
          FROM vendas v
          LEFT JOIN clientes c ON c.id = v.cliente_id
@@ -91,7 +91,10 @@ export async function GET(request: NextRequest) {
     );
 
     const deals = rows.map((row) => {
-      const stage = STAGE_POR_STATUS[String(row.status)] ?? "Contato";
+      const crmStage = String(row.crm_stage ?? "");
+      const stage: Stage = STAGES.includes(crmStage as Stage)
+        ? (crmStage as Stage)
+        : STAGE_POR_STATUS[String(row.status)] ?? "Contato";
       return {
         id: String(row.id),
         title: `Venda #${row.id}`,
@@ -217,8 +220,8 @@ export async function POST(request: NextRequest) {
     const proximo = Number(maxRows[0]?.proximo ?? Date.now());
 
     await db.execute(
-      `INSERT INTO vendas (id, promotor_id, cliente_id, total, forma_pagamento, produto_chave, status, criado_em)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      `INSERT INTO vendas (id, promotor_id, cliente_id, total, forma_pagamento, produto_chave, status, crm_stage, criado_em)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         proximo,
         auth.usuario.id,
@@ -227,6 +230,7 @@ export async function POST(request: NextRequest) {
         "pix",
         produtoChave,
         status,
+        etapa,
       ]
     );
 
