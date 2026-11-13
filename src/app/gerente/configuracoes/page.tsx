@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   User,
   Bell,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 
 export default function ConfiguracoesPage() {
+  const router = useRouter();
+
   const [notifications, setNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
@@ -25,53 +28,141 @@ export default function ConfiguracoesPage() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [alert, setAlert] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
-  const salvarConfiguracoes = () => {
-    setAlert({
-      type: "success",
-      message: "Configurações atualizadas com sucesso!",
-    });
-    setTimeout(() => {
-      setAlert(null);
-    }, 3000);
-  };
+  useEffect(() => {
+    let ativo = true;
 
-  const alterarSenha = () => {
-    if (!password || !newPassword || !confirmPassword) {
+    fetch("/api/me/preferences", { cache: "no-store", credentials: "same-origin" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!ativo || !data) return;
+        setNotifications(Boolean(data.notifications ?? true));
+        setEmailNotifications(Boolean(data.email_notifications ?? true));
+        setSmsNotifications(Boolean(data.sms_notifications ?? false));
+      })
+      .catch(() => null);
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!alert || alert.type !== "success") return;
+    const timer = window.setTimeout(() => setAlert(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [alert]);
+
+  const salvarConfiguracoes = async () => {
+    if (saving) return;
+    setSaving(true);
+    setAlert(null);
+
+    try {
+      const response = await fetch("/api/me/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          notifications,
+          email_notifications: emailNotifications,
+          sms_notifications: smsNotifications,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Não foi possível salvar as preferências.");
+      }
+
+      setAlert({
+        type: "success",
+        message: "Configurações atualizadas com sucesso!",
+      });
+    } catch (error) {
       setAlert({
         type: "error",
-        message: "Preencha todos os campos da senha.",
+        message:
+          error instanceof Error ? error.message : "Erro ao salvar as configurações.",
       });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const alterarSenha = async () => {
+    if (savingPassword) return;
+
+    if (!password || !newPassword || !confirmPassword) {
+      setAlert({ type: "error", message: "Preencha todos os campos da senha." });
       return;
     }
     if (newPassword !== confirmPassword) {
+      setAlert({ type: "error", message: "As senhas não são iguais." });
+      return;
+    }
+    if (newPassword.length < 8) {
       setAlert({
         type: "error",
-        message: "As senhas não são iguais.",
+        message: "A nova senha deve possuir pelo menos 8 caracteres.",
       });
       return;
     }
-    if (newPassword.length < 6) {
+
+    setSavingPassword(true);
+    setAlert(null);
+
+    try {
+      const response = await fetch("/api/me/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          current_password: password,
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || data?.error || "Não foi possível alterar a senha."
+        );
+      }
+
+      setPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setAlert({ type: "success", message: "Senha alterada com sucesso!" });
+    } catch (error) {
       setAlert({
         type: "error",
-        message: "A nova senha deve possuir pelo menos 6 caracteres.",
+        message: error instanceof Error ? error.message : "Erro ao alterar a senha.",
       });
-      return;
+    } finally {
+      setSavingPassword(false);
     }
-    setAlert({
-      type: "success",
-      message: "Senha alterada com sucesso!",
-    });
-    setPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setTimeout(() => {
-      setAlert(null);
-    }, 3000);
+  };
+
+  const sair = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+    }).catch(() => null);
+
+    localStorage.removeItem("token");
+    sessionStorage.clear();
+    router.replace("/");
   };
 
   return (
@@ -183,10 +274,11 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={alterarSenha}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-semibold transition cursor-pointer shadow-sm"
+                      disabled={savingPassword}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-semibold transition cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <Save size={15} />
-                      Alterar senha
+                      {savingPassword ? "Alterando..." : "Alterar senha"}
                     </button>
                   </div>
                 </div>
@@ -233,9 +325,7 @@ export default function ConfiguracoesPage() {
             <div className="p-5 md:p-6 space-y-3">
               <button
                 type="button"
-                onClick={() => {
-                  window.location.href = "/";
-                }}
+                onClick={sair}
                 className="w-full flex items-center justify-between p-4 rounded-xl border border-[#e8eef2] hover:bg-gray-50 transition cursor-pointer"
               >
                 <div className="flex items-center gap-3">
@@ -259,10 +349,11 @@ export default function ConfiguracoesPage() {
             <button
               type="button"
               onClick={salvarConfiguracoes}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-semibold transition shadow-sm cursor-pointer"
+              disabled={saving}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-semibold transition shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save size={16} />
-              Salvar configurações
+              {saving ? "Salvando..." : "Salvar configurações"}
             </button>
           </div>
         </div>

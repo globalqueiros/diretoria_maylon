@@ -10,7 +10,12 @@ export default function LogoutPage() {
   useEffect(() => {
     localStorage.removeItem("token");
     sessionStorage.clear();
-    document.cookie = "token=; path=/; max-age=0";
+
+    fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+    }).catch(() => null);
 
     const timer = setTimeout(() => {
       router.replace("/?logout=success");
