@@ -23,7 +23,7 @@ export async function PUT(req: Request, ctx: Ctx) {
     const d = v.dados;
 
     const [res] = await db.execute<ResultSetHeader>(
-      `UPDATE marketing_campaigns
+      `UPDATE metas
          SET titulo = ?, descricao = ?, tipo = ?, valor_meta = ?, valor_atual = ?,
              inicio = ?, fim = ?, responsavel = ?, status = ?
        WHERE id = ?`,

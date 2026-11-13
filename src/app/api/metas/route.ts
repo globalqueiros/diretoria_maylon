@@ -22,12 +22,12 @@ export async function POST(req: Request) {
     const d = v.dados;
 
     const [res] = await db.execute<ResultSetHeader>(
-      `INSERT INTO marketing_campaigns (titulo, descricao, tipo, valor_meta, valor_atual, inicio, fim, responsavel, status)
+      `INSERT INTO metas (titulo, descricao, tipo, valor_meta, valor_atual, inicio, fim, responsavel, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [d.titulo, d.descricao || null, d.tipo, d.valorMeta, d.valorAtual, d.inicio, d.fim, d.responsavel || null, d.status]
     );
 
-    const [linhas] = await db.query<RowDataPacket[]>(`SELECT ${COLUNAS} FROM marketing_campaigns WHERE id = ?`, [res.insertId]);
+    const [linhas] = await db.query<RowDataPacket[]>(`SELECT ${COLUNAS} FROM metas WHERE id = ?`, [res.insertId]);
     return NextResponse.json(linhaParaMeta(linhas[0]), { status: 201 });
   } catch (e) {
     console.error('POST /api/metas', e);

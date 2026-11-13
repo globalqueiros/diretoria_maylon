@@ -14,7 +14,6 @@ import {
   Landmark,
   LayoutDashboard,
   RefreshCw,
-  Search,
   Send,
   TrendingDown,
   TrendingUp,
@@ -72,8 +71,12 @@ const TONS: Record<Tom, string> = {
 
 const SECOES: { id: SecaoId; rotulo: string; descricao: string; icone: LucideIcon }[] = [
   { id: "visao", rotulo: "Visão geral", descricao: "Recebimentos, comissões e pendências da sua equipe.", icone: LayoutDashboard },
+  { id: "contas", rotulo: "Contas e saldos", descricao: "Saldo do caixa e movimentações registradas.", icone: Landmark },
   { id: "folha", rotulo: "Folha da equipe", descricao: "Salários, comissões, benefícios e descontos dos colaboradores vinculados a você.", icone: Users },
+  { id: "pagar", rotulo: "Contas a pagar", descricao: "Folha pendente, boletos e compromissos em aberto.", icone: ArrowDownCircle },
+  { id: "receber", rotulo: "Contas a receber", descricao: "Vendas em aberto e cobranças pendentes.", icone: ArrowUpCircle },
   { id: "aprovacoes", rotulo: "Reembolsos", descricao: "Solicitações de reembolso dos motoristas da sua carteira.", icone: CheckCircle2 },
+  { id: "relatorios", rotulo: "Relatórios", descricao: "Fluxo de caixa, despesas por setor, folha e resultado mensal.", icone: BarChart3 },
 ];
 
 const STATUS_CLASSE: Record<string, { rotulo: string; classe: string }> = {
@@ -197,7 +200,8 @@ function useApi(caminho: string) {
   );
 
   useEffect(() => {
-    void carregar();
+    const timer = setTimeout(() => void carregar(), 0);
+    return () => clearTimeout(timer);
   }, [carregar]);
 
   return { dados, carregando, atualizando, erro, carregar };
@@ -1247,8 +1251,12 @@ export default function FinanceiroPage() {
 
       <div role="tabpanel" id={`painel-${secao}`} aria-labelledby={`aba-${secao}`}>
         {secao === "visao" && <VisaoGeral />}
+        {secao === "contas" && <ContasSaldos />}
         {secao === "folha" && <FolhaPagamento />}
+        {secao === "pagar" && <ContasPagar />}
+        {secao === "receber" && <ContasReceber />}
         {secao === "aprovacoes" && <Aprovacoes />}
+        {secao === "relatorios" && <Relatorios />}
       </div>
     </main>
   );

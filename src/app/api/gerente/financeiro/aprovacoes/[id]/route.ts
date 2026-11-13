@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 import { db2 } from "../../../../../lib/db";
 import { exigirPerfilNaApi } from "../../../../../lib/roles";
 
@@ -43,7 +44,14 @@ export async function PATCH(
     );
 
     if ((result as { affectedRows: number }).affectedRows === 0) {
-      return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
+      const [existe] = await db2.query<RowDataPacket[]>(
+        `SELECT 1 FROM chamados_reembolso WHERE id = ? LIMIT 1`,
+        [reembolsoId]
+      );
+
+      if (!existe.length) {
+        return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
+      }
     }
 
     return NextResponse.json({ success: true });

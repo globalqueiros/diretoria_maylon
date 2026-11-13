@@ -216,6 +216,39 @@ async function solicitacoesTemSolicitante() {
     return temColunaSolicitante;
 }
 
+// A tabela de solicitações já tem a coluna gerente_id?
+let temColunaGerente: boolean | null = null;
+
+async function solicitacoesTemGerente() {
+    if (temColunaGerente !== null) return temColunaGerente;
+
+    const [cols] = await db.query<RowDataPacket[]>(
+        `SHOW COLUMNS FROM \`maylon_pass_solicitacoes\` LIKE 'gerente_id'`
+    );
+
+    temColunaGerente = cols.length > 0;
+
+    return temColunaGerente;
+}
+
+// Descobre o gerente responsável pelo usuário que está criando a solicitação.
+async function gerenteDoSolicitante(
+    solicitanteId: number | null
+): Promise<number | null> {
+    if (!solicitanteId) return null;
+
+    const [rows] = await db.query<RowDataPacket[]>(
+        `SELECT gerente_id FROM users WHERE id = ? LIMIT 1`,
+        [solicitanteId]
+    );
+
+    const gerenteId = rows[0]?.gerente_id;
+    const numero = Number(gerenteId);
+
+    return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
+}
+
+
 // Expressão SQL que deixa só os números de uma coluna (tira máscara)
 function somenteDigitosSql(coluna: string) {
     return `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(\`${coluna}\`, '(', ''), ')', ''), '-', ''), '.', ''), ' ', '')`;
@@ -677,6 +710,15 @@ export async function POST(request: NextRequest) {
         if (await solicitacoesTemSolicitante()) {
             campos.push("solicitante_id");
             valores.push(solicitanteId);
+        }
+
+        // Encaminha a solicitação para o gerente responsável pelo solicitante.
+        if (await solicitacoesTemGerente()) {
+            const gerenteId = await gerenteDoSolicitante(solicitanteId);
+            if (gerenteId) {
+                campos.push("gerente_id");
+                valores.push(gerenteId);
+            }
         }
 
         const [resultado] = await db.query<ResultSetHeader>(
