@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Status = "pendente" | "aprovada" | "recusada";
@@ -20,6 +21,7 @@ type Cotacao = {
   total: number;
   status: Status;
   observacao_gerente: string | null;
+  criado_por: string | null;
   decidido_por: string | null;
   decidido_em: string | null;
   criado_em: string;
@@ -39,6 +41,11 @@ const ESPACO_NOME: Record<string, string> = {
   push: "Notificação push",
 };
 
+const PUBLICO_NOME: Record<string, string> = {
+  passageiros: "Passageiros",
+  motoristas: "Motoristas",
+};
+
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const data = (s: string | null) =>
   s ? new Date(s).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "–";
@@ -52,7 +59,7 @@ function Selo({ status }: { status: Status }) {
   );
 }
 
-export default function GerenteCotacoesPage() {
+export default function CotacoesPublicidadePage() {
   const [lista, setLista] = useState<Cotacao[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -60,9 +67,6 @@ export default function GerenteCotacoesPage() {
   const [busca, setBusca] = useState("");
   const [pagina, setPagina] = useState(1);
   const [aberta, setAberta] = useState<Cotacao | null>(null);
-  const [obs, setObs] = useState("");
-  const [salvando, setSalvando] = useState(false);
-  const [erroModal, setErroModal] = useState("");
 
   const POR_PAGINA = 10;
 
@@ -70,10 +74,10 @@ export default function GerenteCotacoesPage() {
     setCarregando(true);
     setErro("");
     try {
-      const res = await fetch("/api/cotacao", { cache: "no-store" });
+      const res = await fetch("/api/comercial/cotacoes", { cache: "no-store" });
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setLista(json.cotacoes ?? []);
+      setLista(Array.isArray(json) ? json : []);
     } catch {
       setErro("Não foi possível carregar as cotações. Tente de novo.");
     } finally {
@@ -82,7 +86,8 @@ export default function GerenteCotacoesPage() {
   }, []);
 
   useEffect(() => {
-    carregar();
+    const timer = setTimeout(() => void carregar(), 0);
+    return () => clearTimeout(timer);
   }, [carregar]);
 
   const contagem = useMemo(
@@ -110,37 +115,6 @@ export default function GerenteCotacoesPage() {
   const paginaAtual = Math.min(pagina, totalPaginas);
   const visiveis = filtradas.slice((paginaAtual - 1) * POR_PAGINA, paginaAtual * POR_PAGINA);
 
-  function abrir(c: Cotacao) {
-    setAberta(c);
-    setObs("");
-    setErroModal("");
-  }
-
-  async function decidir(status: "aprovada" | "recusada") {
-    if (!aberta) return;
-    if (status === "recusada" && !obs.trim()) {
-      setErroModal("Informe o motivo da recusa.");
-      return;
-    }
-    setSalvando(true);
-    setErroModal("");
-    try {
-      const res = await fetch(`/api/cotacao/${aberta.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, observacao: obs }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || "Falha ao salvar.");
-      setAberta(null);
-      await carregar();
-    } catch (e) {
-      setErroModal(e instanceof Error ? e.message : "Falha ao salvar.");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
   const abas: { id: "todas" | Status; rotulo: string; n: number }[] = [
     { id: "todas", rotulo: "Todas", n: lista.length },
     { id: "pendente", rotulo: "Aguardando", n: contagem.pendente },
@@ -150,11 +124,19 @@ export default function GerenteCotacoesPage() {
 
   return (
     <div className="mx-auto max-w-8xl space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-xl font-semibold text-white sm:text-2xl">Cotações de publicidade</h1>
-        <p className="mt-0 text-sm text-white">
-          Acompanhe as propostas de anunciantes e veja se o gerente já aprovou.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-white sm:text-2xl">Cotações de publicidade</h1>
+          <p className="mt-0 text-sm text-white">
+            Monte propostas de anúncio e acompanhe a aprovação do gerente.
+          </p>
+        </div>
+        <Link
+          href="/comercial/comercial/novo"
+          className="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[#1f8a6c] shadow-sm transition hover:bg-emerald-50"
+        >
+          Nova cotação
+        </Link>
       </div>
 
       {/* Resumo */}
@@ -263,10 +245,10 @@ export default function GerenteCotacoesPage() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
-                    onClick={() => abrir(c)}
+                    onClick={() => setAberta(c)}
                     className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#1f8a6c] ring-1 ring-[#35aa8a]/40 hover:bg-[#35aa8a]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#35aa8a]"
                   >
-                    {c.status === "pendente" ? "Analisar" : "Ver"}
+                    {c.status === "pendente" ? "Ver" : "Detalhes"}
                   </button>
                 </td>
               </tr>
@@ -284,7 +266,7 @@ export default function GerenteCotacoesPage() {
         {visiveis.map((c) => (
           <button
             key={c.id}
-            onClick={() => abrir(c)}
+            onClick={() => setAberta(c)}
             className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#35aa8a]"
           >
             <div className="flex items-start justify-between gap-3">
@@ -326,7 +308,7 @@ export default function GerenteCotacoesPage() {
         </div>
       )}
 
-      {/* Modal de análise */}
+      {/* Modal (somente leitura) */}
       {aberta && (
         <div
           role="dialog"
@@ -358,7 +340,9 @@ export default function GerenteCotacoesPage() {
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-slate-500">Público</dt>
-                <dd className="text-right capitalize">{aberta.publicos.join(" e ")}</dd>
+                <dd className="text-right">
+                  {aberta.publicos.map((p) => PUBLICO_NOME[p] ?? p).join(" e ")}
+                </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-slate-500">Espaços</dt>
@@ -378,6 +362,12 @@ export default function GerenteCotacoesPage() {
                     .join(", ") || "Nenhum"}
                 </dd>
               </div>
+              {aberta.criado_por && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-slate-500">Criada por</dt>
+                  <dd className="text-right">{aberta.criado_por}</dd>
+                </div>
+              )}
               <div className="flex justify-between gap-4 border-t border-slate-100 pt-3">
                 <dt className="font-medium">Valor total</dt>
                 <dd className="font-semibold tabular-nums">{brl(aberta.total)}</dd>
@@ -390,63 +380,27 @@ export default function GerenteCotacoesPage() {
               )}
             </dl>
 
-            {aberta.status === "pendente" ? (
-              <div className="mt-6">
-                <label htmlFor="obs" className="mb-1.5 block text-sm font-medium">
-                  Observação (obrigatória para recusar)
-                </label>
-                <textarea
-                  id="obs"
-                  rows={3}
-                  value={obs}
-                  onChange={(e) => setObs(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#35aa8a] focus:outline-none focus:ring-2 focus:ring-[#35aa8a]/30"
-                />
-                {erroModal && (
-                  <p role="alert" className="mt-2 text-sm text-red-600">
-                    {erroModal}
+            <div className="mt-6 rounded-lg bg-slate-50 p-4 text-sm">
+              {aberta.status === "pendente" ? (
+                <p className="font-medium text-slate-700">Aguardando aprovação do gerente.</p>
+              ) : (
+                <>
+                  <p className="font-medium">
+                    {aberta.status === "aprovada" ? "Aprovada" : "Recusada"}
+                    {aberta.decidido_por ? ` por ${aberta.decidido_por}` : ""} em {data(aberta.decidido_em)}
                   </p>
-                )}
-                <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <button
-                    onClick={() => setAberta(null)}
-                    className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
-                  >
-                    Fechar
-                  </button>
-                  <button
-                    disabled={salvando}
-                    onClick={() => decidir("recusada")}
-                    className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                  >
-                    Recusar
-                  </button>
-                  <button
-                    disabled={salvando}
-                    onClick={() => decidir("aprovada")}
-                    className="rounded-lg bg-[#35aa8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#2c937a] disabled:opacity-60"
-                  >
-                    {salvando ? "Salvando..." : "Aprovar"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-6 rounded-lg bg-slate-50 p-4 text-sm">
-                <p className="font-medium">
-                  {aberta.status === "aprovada" ? "Aprovada" : "Recusada"}
-                  {aberta.decidido_por ? ` por ${aberta.decidido_por}` : ""} em {data(aberta.decidido_em)}
-                </p>
-                {aberta.observacao_gerente && (
-                  <p className="mt-1 text-slate-600">{aberta.observacao_gerente}</p>
-                )}
-                <button
-                  onClick={() => setAberta(null)}
-                  className="mt-4 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white"
-                >
-                  Fechar
-                </button>
-              </div>
-            )}
+                  {aberta.observacao_gerente && (
+                    <p className="mt-1 text-slate-600">{aberta.observacao_gerente}</p>
+                  )}
+                </>
+              )}
+              <button
+                onClick={() => setAberta(null)}
+                className="mt-4 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}

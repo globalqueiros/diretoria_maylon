@@ -38,11 +38,6 @@ interface Assinante {
     criado_em?: string | null;
 }
 
-/* ------------------------------------------------------------------ */
-/* Regras e formatadores                                               */
-/* ------------------------------------------------------------------ */
-
-// Status: 0 = Ativo | 1 = Inativo (tinyint(1) pode chegar como boolean)
 function estaAtivo(status: unknown) {
     if (status === false) return true;
     if (status === true) return false;
@@ -333,8 +328,8 @@ export default function MaylonPassPage() {
         }`;
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-[#35b890] to-[#4cc9a5] px-3 pb-10 pt-3 sm:px-5 lg:px-8 2xl:px-12">
-            <div className="mx-auto max-w-[1600px] space-y-5">
+        <main className="min-h-screen">
+            <div className="mx-auto max-w-8xl space-y-5">
                 {/* INDICADORES */}
                 <section
                     aria-label="Indicadores do Maylon Pass"

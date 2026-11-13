@@ -14,7 +14,6 @@ import {
   Landmark,
   LayoutDashboard,
   RefreshCw,
-  Search,
   Send,
   TrendingDown,
   TrendingUp,
@@ -72,8 +71,10 @@ const TONS: Record<Tom, string> = {
 
 const SECOES: { id: SecaoId; rotulo: string; descricao: string; icone: LucideIcon }[] = [
   { id: "visao", rotulo: "Visão geral", descricao: "Recebimentos, comissões e pendências da sua equipe.", icone: LayoutDashboard },
+  { id: "contas", rotulo: "Contas e saldos", descricao: "Saldo do caixa e movimentações registradas.", icone: Landmark },
   { id: "folha", rotulo: "Folha da equipe", descricao: "Salários, comissões, benefícios e descontos dos colaboradores vinculados a você.", icone: Users },
   { id: "aprovacoes", rotulo: "Reembolsos", descricao: "Solicitações de reembolso dos motoristas da sua carteira.", icone: CheckCircle2 },
+  { id: "relatorios", rotulo: "Relatórios", descricao: "Fluxo de caixa, despesas por setor, folha e resultado mensal.", icone: BarChart3 },
 ];
 
 const STATUS_CLASSE: Record<string, { rotulo: string; classe: string }> = {
@@ -197,7 +198,8 @@ function useApi(caminho: string) {
   );
 
   useEffect(() => {
-    void carregar();
+    const timer = setTimeout(() => void carregar(), 0);
+    return () => clearTimeout(timer);
   }, [carregar]);
 
   return { dados, carregando, atualizando, erro, carregar };
@@ -909,77 +911,6 @@ function marcarVencidos(l: Linha): Linha {
   return l;
 }
 
-function ContasPagar() {
-  return (
-    <SecaoLista
-      caminho="pagar"
-      chave="contas"
-      titulo="Contas a pagar"
-      subtitulo="Fornecedores, vencimentos, despesas fixas e boletos"
-      icone={ArrowDownCircle}
-      rotuloVazio="Nenhuma conta a pagar"
-      filtroStatus
-      preparar={marcarVencidos}
-      colunas={[
-        { chave: "fornecedor", rotulo: "Fornecedor" },
-        { chave: "descricao", rotulo: "Descrição" },
-        { chave: "categoria", rotulo: "Categoria" },
-        { chave: "vencimento", rotulo: "Vencimento", tipo: "data" },
-        { chave: "status", rotulo: "Situação", tipo: "status" },
-        { chave: "valor", rotulo: "Valor", tipo: "moeda", direita: true },
-      ]}
-      indicadores={(l) => {
-        const venc = l.filter((x) => statusDe(x) === "vencido");
-        const em7 = Date.now() + 7 * 86400000;
-        const proximos = l.filter((x) => {
-          const d = paraData(x.vencimento);
-          return ativo(x) && statusDe(x) !== "vencido" && d && d.getTime() <= em7;
-        });
-        return [
-          { rotulo: "Em aberto", valor: moeda(soma(l, "valor", ativo)), detalhe: "Ainda não pago", icone: Wallet, tom: "teal" },
-          { rotulo: "Vencidas", valor: moeda(soma(venc, "valor")), detalhe: `${venc.length} conta(s) em atraso`, icone: AlertCircle, tom: "rose" },
-          { rotulo: "Vencem em 7 dias", valor: moeda(soma(proximos, "valor")), detalhe: `${proximos.length} conta(s)`, icone: Clock, tom: "amber" },
-          { rotulo: "Pagas", valor: moeda(soma(l, "valor", (x) => statusDe(x) === "pago")), detalhe: "No período carregado", icone: CheckCircle2, tom: "emerald" },
-        ];
-      }}
-    />
-  );
-}
-
-function ContasReceber() {
-  return (
-    <SecaoLista
-      caminho="receber"
-      chave="contas"
-      titulo="Contas a receber"
-      subtitulo="Cobranças, recebimentos pendentes e conciliação"
-      icone={ArrowUpCircle}
-      rotuloVazio="Nenhuma conta a receber"
-      filtroStatus
-      preparar={marcarVencidos}
-      colunas={[
-        { chave: "cliente", rotulo: "Cliente" },
-        { chave: "descricao", rotulo: "Descrição" },
-        { chave: "vencimento", rotulo: "Vencimento", tipo: "data" },
-        { chave: "recebido_em", rotulo: "Recebido em", tipo: "data" },
-        { chave: "status", rotulo: "Situação", tipo: "status" },
-        { chave: "valor", rotulo: "Valor", tipo: "moeda", direita: true },
-      ]}
-      indicadores={(l) => {
-        const venc = l.filter((x) => statusDe(x) === "vencido");
-        const recebidos = l.filter((x) => ["recebido", "pago", "conciliado"].includes(statusDe(x)));
-        const conciliados = l.filter((x) => statusDe(x) === "conciliado" || x.conciliado === true || x.conciliado === 1);
-        return [
-          { rotulo: "A receber", valor: moeda(soma(l, "valor", ativo)), detalhe: "Cobranças em aberto", icone: Wallet, tom: "teal" },
-          { rotulo: "Em atraso", valor: moeda(soma(venc, "valor")), detalhe: `${venc.length} cobrança(s)`, icone: AlertCircle, tom: "rose" },
-          { rotulo: "Recebido", valor: moeda(soma(recebidos, "valor")), detalhe: "No período carregado", icone: CheckCircle2, tom: "emerald" },
-          { rotulo: "Conciliado", valor: `${conciliados.length} de ${recebidos.length}`, detalhe: "Recebimentos conferidos", icone: Landmark, tom: "slate" },
-        ];
-      }}
-    />
-  );
-}
-
 function Aprovacoes() {
   const [processando, setProcessando] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState("");
@@ -1247,8 +1178,10 @@ export default function FinanceiroPage() {
 
       <div role="tabpanel" id={`painel-${secao}`} aria-labelledby={`aba-${secao}`}>
         {secao === "visao" && <VisaoGeral />}
+        {secao === "contas" && <ContasSaldos />}
         {secao === "folha" && <FolhaPagamento />}
         {secao === "aprovacoes" && <Aprovacoes />}
+        {secao === "relatorios" && <Relatorios />}
       </div>
     </main>
   );

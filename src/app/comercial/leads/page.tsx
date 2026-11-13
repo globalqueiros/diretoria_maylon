@@ -71,7 +71,10 @@ export default function LeadsComercialPage() {
     finally { setLoading(false); }
   }, [page, period, search, status, source]);
 
-  useEffect(() => { void loadLeads(); }, [loadLeads]);
+  useEffect(() => {
+    const timer = setTimeout(() => void loadLeads(), 0);
+    return () => clearTimeout(timer);
+  }, [loadLeads]);
 
   const createLead = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setSaving(true); setError("");
@@ -90,7 +93,7 @@ export default function LeadsComercialPage() {
 
   const updateStatus = async (lead: Lead, next: LeadStatus) => {
     try {
-      const response = await fetch(`/api/comercial/clientes/${encodeURIComponent(lead.id)}`, {
+      const response = await fetch(`/api/comercial/leads/${encodeURIComponent(lead.id)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: next }),
       });
       if (!response.ok) throw new Error("Falha ao atualizar o status.");

@@ -7,21 +7,27 @@ export const dynamic = "force-dynamic";
 
 type LeadStatus = "Novo" | "Em contato" | "Qualificado" | "Proposta" | "Convertido" | "Perdido";
 
+const LEAD_STATUSES: LeadStatus[] = [
+  "Novo",
+  "Em contato",
+  "Qualificado",
+  "Proposta",
+  "Convertido",
+  "Perdido",
+];
+
 function numero(valor: unknown) {
   const n = Number(valor ?? 0);
   return Number.isFinite(n) ? n : 0;
 }
 
 function statusDerivado(row: RowDataPacket): LeadStatus {
+  const manual = String(row.lead_status ?? "");
+  if (LEAD_STATUSES.includes(manual as LeadStatus)) return manual as LeadStatus;
   if (numero(row.status_cliente) !== 0) return "Perdido";
   if (numero(row.vendas_pagas) > 0) return "Convertido";
   if (numero(row.vendas_abertas) > 0) return "Proposta";
   return "Novo";
-}
-
-function escopoCliente(status: string) {
-  if (status === "Perdido") return 1;
-  return 0;
 }
 
 export async function GET(request: NextRequest) {
@@ -60,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     const [rows] = await db.query<RowDataPacket[]>(
       `SELECT c.id, c.numero, c.nome, c.email, c.telefone, c.cidade,
-              c.status AS status_cliente, c.criado_em,
+              c.status AS status_cliente, c.lead_status, c.criado_em,
               (SELECT COUNT(*) FROM vendas v WHERE v.cliente_id = c.id AND v.status = 'paga') AS vendas_pagas,
               (SELECT COUNT(*) FROM vendas v WHERE v.cliente_id = c.id AND v.status IN ('pendente','registrada')) AS vendas_abertas,
               (SELECT COALESCE(SUM(v.total), 0) FROM vendas v WHERE v.cliente_id = c.id AND v.status = 'paga') AS valor_total,
@@ -178,10 +184,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Status inválido." }, { status: 400 });
     }
 
-    await db.execute(`UPDATE clientes SET status = ? WHERE id = ?`, [
-      escopoCliente(status),
-      id,
-    ]);
+    await db.execute(
+      `UPDATE clientes SET lead_status = ?, status = ? WHERE id = ?`,
+      [status, status === "Perdido" ? 1 : 0, id]
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

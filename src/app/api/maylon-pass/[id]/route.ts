@@ -1,8 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 import { db } from "../../../lib/db";
 import { exigirPerfilNaApi } from "../../../lib/roles";
 
 export const dynamic = "force-dynamic";
+
+const PERGUNTAS = ["nome", "email", "telefone", "id"] as const;
+type PerguntaId = (typeof PERGUNTAS)[number];
+
+function normalizar(valor: unknown): string {
+  return String(valor ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+function somenteDigitos(valor: unknown): string {
+  return String(valor ?? "").replace(/\D/g, "");
+}
+
+function esperadoDaPergunta(
+  pergunta: PerguntaId,
+  usuario: RowDataPacket
+): string | null {
+  if (pergunta === "telefone") {
+    const digitos = somenteDigitos(usuario.phone);
+    return digitos.length >= 4 ? digitos.slice(-4) : null;
+  }
+  if (pergunta === "nome") {
+    const nome = normalizar(usuario.full_name);
+    return nome || null;
+  }
+  if (pergunta === "email") {
+    const email = normalizar(usuario.email);
+    return email || null;
+  }
+  return normalizar(usuario.id) || null;
+}
+
+function confirmacaoConfere(
+  pergunta: PerguntaId,
+  esperado: string,
+  confirmacao: string
+): boolean {
+  if (pergunta === "telefone") {
+    const digitos = somenteDigitos(confirmacao);
+    return digitos.length === 4 && digitos === esperado;
+  }
+  return normalizar(confirmacao).replace(/^#/, "") === esperado;
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -21,6 +69,48 @@ export async function PATCH(
 
     if (!Number.isSafeInteger(userId) || userId <= 0) {
       return NextResponse.json({ error: "Usuário inválido." }, { status: 400 });
+    }
+
+    const pergunta = String(body?.pergunta ?? "").trim().toLowerCase();
+    const confirmacao = String(body?.confirmacao ?? "").trim();
+
+    if (!PERGUNTAS.includes(pergunta as PerguntaId)) {
+      return NextResponse.json(
+        { error: "Pergunta de segurança inválida." },
+        { status: 400 }
+      );
+    }
+
+    if (!confirmacao) {
+      return NextResponse.json(
+        { error: "Responda à pergunta de segurança para confirmar." },
+        { status: 400 }
+      );
+    }
+
+    const [usuarios] = await db.query<RowDataPacket[]>(
+      `SELECT id, full_name, email, phone FROM users WHERE id = ? LIMIT 1`,
+      [userId]
+    );
+
+    if (!usuarios.length) {
+      return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
+    }
+
+    const esperado = esperadoDaPergunta(pergunta as PerguntaId, usuarios[0]);
+
+    if (!esperado) {
+      return NextResponse.json(
+        { error: "Pergunta de segurança indisponível para este usuário." },
+        { status: 400 }
+      );
+    }
+
+    if (!confirmacaoConfere(pergunta as PerguntaId, esperado, confirmacao)) {
+      return NextResponse.json(
+        { error: "Confirmação de segurança inválida." },
+        { status: 400 }
+      );
     }
 
     const campos: string[] = [];
@@ -61,11 +151,18 @@ export async function PATCH(
 
     const [result] = await db.execute(
       `UPDATE users SET ${campos.join(", ")} WHERE id = ? LIMIT 1`,
-      valores as any[]
+      valores as (string | number | null)[]
     );
 
     if ((result as { affectedRows: number }).affectedRows === 0) {
-      return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
+      const [existe] = await db.query<RowDataPacket[]>(
+        `SELECT 1 FROM users WHERE id = ? LIMIT 1`,
+        [userId]
+      );
+
+      if (!existe.length) {
+        return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
+      }
     }
 
     return NextResponse.json({ success: true });

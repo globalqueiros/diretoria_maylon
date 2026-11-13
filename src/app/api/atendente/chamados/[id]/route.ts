@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 import { db } from "../../../../lib/db";
 import { exigirPerfilNaApi } from "../../../../lib/roles";
 
@@ -52,11 +53,18 @@ export async function PATCH(
 
     const [result] = await db.execute(
       `UPDATE chamados SET ${campos.join(", ")} WHERE id = ? LIMIT 1`,
-      valores as any[]
+      valores as (string | number | null)[]
     );
 
     if ((result as { affectedRows: number }).affectedRows === 0) {
-      return NextResponse.json({ error: "Chamado não encontrado." }, { status: 404 });
+      const [existe] = await db.query<RowDataPacket[]>(
+        `SELECT 1 FROM chamados WHERE id = ? LIMIT 1`,
+        [chamadoId]
+      );
+
+      if (!existe.length) {
+        return NextResponse.json({ error: "Chamado não encontrado." }, { status: 404 });
+      }
     }
 
     return NextResponse.json({ success: true });

@@ -1,13 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-/* ------------------------------------------------------------------ */
-/* CONFIGURAÇÃO COMERCIAL — ajuste estes valores para a sua operação.  */
-/* ------------------------------------------------------------------ */
 const BASE_USUARIOS = {
-  passageiros: 20000, // usuários ativos por mês
-  motoristas: 3000,
+  passageiros: 1000, // usuários ativos por mês
+  motoristas: 500,
 };
 
 type Espaco = {
@@ -78,6 +76,7 @@ const descontoPorSemanas = (s: number) => (s >= 12 ? 0.15 : s >= 8 ? 0.1 : s >= 
 
 const SEGMENTACAO = { base: { usuarios: 1, preco: 1 }, regiao: { usuarios: 0.4, preco: 1.25 } };
 const CRIACAO_VALOR = 600; // criação do material pela equipe
+const VALOR_MINIMO = 200; // investimento mínimo da campanha
 
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -114,8 +113,11 @@ export default function CotacaoPage() {
     const bruto = linhas.reduce((s, l) => s + l.valor, 0);
     const descPct = descontoPorSemanas(semanas);
     const desconto = bruto * descPct;
+    // O mínimo vale depois do desconto: nenhuma campanha fica abaixo de VALOR_MINIMO
+    const minimoAplicado = linhas.length > 0 && bruto - desconto < VALOR_MINIMO;
+    const liquido = linhas.length > 0 ? Math.max(bruto - desconto, VALOR_MINIMO) : 0;
     const extras = criacao ? CRIACAO_VALOR : 0;
-    const total = bruto - desconto + extras;
+    const total = liquido + extras;
 
     const exibicoes = linhas.reduce((s, l) => s + l.exibicoes, 0);
     const cliques = linhas.reduce((s, l) => s + l.cliques, 0);
@@ -126,6 +128,7 @@ export default function CotacaoPage() {
       bruto,
       descPct,
       desconto,
+      minimoAplicado,
       extras,
       total,
       exibicoes,
@@ -144,7 +147,7 @@ export default function CotacaoPage() {
     e.preventDefault();
     setStatus("enviando");
     try {
-      const res = await fetch("/api/cotacao", {
+      const res = await fetch("/api/comercial/cotacoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -185,8 +188,8 @@ export default function CotacaoPage() {
             Coloque sua marca na tela de quem usa o app todos os dias
           </h1>
           <p className="mt-1 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-sm">
-            Escolha o público, os espaços e o período. Veja na hora quantas pessoas você alcança e
-            quanto custa a campanha.
+            Campanhas a partir de {brl(VALOR_MINIMO)}. Escolha o público, os espaços e o período e
+            veja na hora quantas pessoas você alcança.
           </p>
         </div>
       </header>
@@ -330,6 +333,12 @@ export default function CotacaoPage() {
                   </tbody>
                 </table>
               </div>
+              {calculo.minimoAplicado && (
+                <p className="mt-3 text-xs text-slate-500">
+                  A soma dos espaços ficou abaixo do investimento mínimo, então a campanha é cobrada a
+                  partir de {brl(VALOR_MINIMO)}.
+                </p>
+              )}
             </section>
           )}
 
@@ -346,8 +355,14 @@ export default function CotacaoPage() {
             <div className="bg-teal-500 px-6 py-5 text-white">
               <p className="text-sm text-white">Investimento estimado</p>
               <p className="mt-1 text-3xl font-semibold tabular-nums">{semDados ? "R$ 0" : brl(calculo.total)}</p>
-              {!semDados && (calculo.desconto > 0 || calculo.extras > 0) && (
-                <p className="mt-1 text-xs text-slate-400">
+              {!semDados && calculo.minimoAplicado && (
+                <p className="mt-1 text-xs text-slate-100">
+                  Investimento mínimo de {brl(VALOR_MINIMO)} aplicado
+                  {calculo.extras > 0 && ` + ${brl(calculo.extras)} de criação`}
+                </p>
+              )}
+              {!semDados && !calculo.minimoAplicado && (calculo.desconto > 0 || calculo.extras > 0) && (
+                <p className="mt-1 text-xs text-slate-100">
                   {brl(calculo.bruto)}
                   {calculo.desconto > 0 && ` − ${brl(calculo.desconto)} de desconto`}
                   {calculo.extras > 0 && ` + ${brl(calculo.extras)} de criação`}
@@ -381,6 +396,12 @@ export default function CotacaoPage() {
                       </>
                     )}
                   </p>
+                  <Link
+                    href="/comercial/comercial"
+                    className="mt-3 inline-flex rounded-lg bg-[#35aa8a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2c937a]"
+                  >
+                    Ver minhas cotações
+                  </Link>
                 </div>
               ) : (
                 <form onSubmit={enviar} className="space-y-3">

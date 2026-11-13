@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 import { db2 } from "../../../lib/db";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -55,7 +56,7 @@ export async function GET(_request: Request, { params }: Ctx) {
     }
 
     const [rows] = await db2.query(SELECT_MOTORISTA, [id]);
-    const lista = rows as any[];
+    const lista = rows as RowDataPacket[];
 
     if (lista.length === 0) {
       return NextResponse.json(
@@ -120,24 +121,32 @@ export async function PATCH(request: Request, { params }: Ctx) {
       [...values, id]
     );
 
-    if ((result as any).affectedRows === 0) {
-      return NextResponse.json(
-        { error: "Motorista não encontrado." },
-        { status: 404 }
+    if ((result as { affectedRows: number }).affectedRows === 0) {
+      const [existe] = await db2.query<RowDataPacket[]>(
+        `SELECT 1 FROM users WHERE id = ? LIMIT 1`,
+        [id]
       );
+
+      if (!existe.length) {
+        return NextResponse.json(
+          { error: "Motorista não encontrado." },
+          { status: 404 }
+        );
+      }
     }
 
     const [rows] = await db2.query(SELECT_MOTORISTA, [id]);
-    const lista = rows as any[];
+    const lista = rows as RowDataPacket[];
 
     return NextResponse.json({
       motorista: lista[0],
       passageiro: lista[0],
     });
-  } catch (error: any) {
+  } catch (error) {
+    const code = (error as { code?: string })?.code;
     console.error("Erro ao atualizar motorista:", error);
 
-    if (error?.code === "ER_DUP_ENTRY") {
+    if (code === "ER_DUP_ENTRY") {
       return NextResponse.json(
         {
           error:
