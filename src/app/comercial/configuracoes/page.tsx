@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  LayoutDashboard,
   LockKeyhole,
   LogOut,
   Mail,
@@ -102,8 +101,7 @@ export default function ConfiguracoesPage() {
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [activeSection, setActiveSection] = useState<string>("preferencias");
   const [saving, setSaving] = useState(false);
-
-  const saveTimer = useRef<number | null>(null);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   function notify(type: "success" | "error", message: string) {
     setFeedback({ type, message });
@@ -118,12 +116,22 @@ export default function ConfiguracoesPage() {
     return () => window.clearTimeout(timer);
   }, [feedback]);
 
-  // Limpa o timer de salvar ao sair da página.
+  // Carrega as preferências persistidas do usuário.
   useEffect(() => {
+    let ativo = true;
+
+    fetch("/api/me/preferences", { cache: "no-store", credentials: "same-origin" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!ativo || !data) return;
+        setNotifications(Boolean(data.notifications ?? true));
+        setEmailNotifications(Boolean(data.email_notifications ?? true));
+        setSmsNotifications(Boolean(data.sms_notifications ?? false));
+      })
+      .catch(() => null);
+
     return () => {
-      if (saveTimer.current !== null) {
-        window.clearTimeout(saveTimer.current);
-      }
+      ativo = false;
     };
   }, []);
 
@@ -151,19 +159,42 @@ export default function ConfiguracoesPage() {
     return () => observer.disconnect();
   }, []);
 
-  function saveSettings() {
+  async function saveSettings() {
     if (saving) return;
 
     setSaving(true);
+    setFeedback(null);
 
-    // Conecte esta função à API para persistir as preferências.
-    saveTimer.current = window.setTimeout(() => {
+    try {
+      const response = await fetch("/api/me/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          notifications,
+          email_notifications: emailNotifications,
+          sms_notifications: smsNotifications,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Não foi possível salvar as preferências.");
+      }
+
+      notify("success", "Preferências salvas com sucesso!");
+    } catch (error) {
+      notify(
+        "error",
+        error instanceof Error ? error.message : "Erro ao salvar as preferências."
+      );
+    } finally {
       setSaving(false);
-      notify("success", "Preferências atualizadas na interface.");
-    }, 400);
+    }
   }
 
-  function changePassword(event: FormEvent<HTMLFormElement>) {
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!password || !newPassword || !confirmPassword) {
@@ -186,10 +217,41 @@ export default function ConfiguracoesPage() {
       return;
     }
 
-    notify(
-      "success",
-      "Validação concluída. Conecte o serviço de autenticação para alterar a senha."
-    );
+    setSavingPassword(true);
+    setFeedback(null);
+
+    try {
+      const response = await fetch("/api/me/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          current_password: password,
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || data?.error || "Não foi possível alterar a senha."
+        );
+      }
+
+      setPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      notify("success", "Senha alterada com sucesso!");
+    } catch (error) {
+      notify(
+        "error",
+        error instanceof Error ? error.message : "Erro ao alterar a senha."
+      );
+    } finally {
+      setSavingPassword(false);
+    }
   }
 
   function scrollToSection(id: string) {
@@ -201,9 +263,16 @@ export default function ConfiguracoesPage() {
     });
   }
 
-  function logout() {
-    // Conecte à sua rota de logout para apagar o cookie de sessão.
-    router.push(ROTA_LOGIN);
+  async function logout() {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+    }).catch(() => null);
+
+    localStorage.removeItem("token");
+    sessionStorage.clear();
+    router.replace(ROTA_LOGIN);
   }
 
   return (
@@ -466,10 +535,11 @@ export default function ConfiguracoesPage() {
 
                       <button
                         type="submit"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#078b7d] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#06766b]"
+                        disabled={savingPassword}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#078b7d] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#06766b] disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <LockKeyhole size={16} />
-                        Atualizar senha
+                        {savingPassword ? "Salvando..." : "Atualizar senha"}
                       </button>
                     </div>
                   </form>

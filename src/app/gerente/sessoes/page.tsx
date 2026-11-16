@@ -146,7 +146,7 @@ export default function SessoesPage() {
 
     try {
       const response = await fetch(
-        `/api/motorista/sessoes?status=${encodeURIComponent(filter)}`,
+        `/api/atendente/sessoes?status=${encodeURIComponent(filter)}`,
         {
           method: "GET",
           cache: "no-store",
@@ -206,7 +206,8 @@ export default function SessoesPage() {
   }, [filter]);
 
   useEffect(() => {
-    void loadSessions();
+    const timer = setTimeout(() => void loadSessions(), 0);
+    return () => clearTimeout(timer);
   }, [loadSessions]);
 
   async function revokeSession() {
@@ -220,7 +221,7 @@ export default function SessoesPage() {
 
     try {
       const response = await fetch(
-        `/api/motorista/sessoes/${encodeURIComponent(session.session_uuid)}`,
+        `/api/atendente/sessoes/${encodeURIComponent(session.session_uuid)}`,
         {
           method: "DELETE",
           cache: "no-store",

@@ -30,6 +30,7 @@ import {
   LocateFixed,
   Megaphone,
   BadgeCheck,
+  ShieldCheck,
   CreditCardMinus,
   IdCard,
   ClipboardList,
@@ -160,6 +161,7 @@ const menuAtendente: MenuItem[] = [
   { name: "Maylon Pass", icon: IdCard, href: "/atendente/maylon_pass" },
   { name: "Relatórios", icon: FileText, href: "/atendente/relatorio" },
   { name: "Comunicados", icon: Megaphone, href: "/atendente/comunicados" },
+  { name: "Dispositivos conectados", icon: ShieldCheck, href: "/atendente/sessoes" },
   { name: "Sair", icon: LogOut, href: "/saindo" },
 ];
 
@@ -178,6 +180,7 @@ const menuGerente: MenuItem[] = [
   { name: "Financeiro", icon: ChartNoAxesCombined, href: "/gerente/financeiro" },
   { name: "Comunicados", icon: Megaphone, href: "/gerente/comunicados" },
   { name: "Perfil", icon: UserIcon, href: "/gerente/perfil" },
+  { name: "Dispositivos conectados", icon: ShieldCheck, href: "/gerente/sessoes" },
   { name: "Sair", icon: LogOut, href: "/saindo" },
 ];
 
@@ -213,6 +216,7 @@ const menuComercial: MenuItem[] = [
   { name: "Comissões", icon: Wallet, href: "/comercial/comissoes" },
   { name: "Atendimentos", icon: MessageCircleMore, href: "/comercial/atendimentos" },
   { name: "Perfil", icon: UserIcon, href: "/comercial/perfil" },
+  { name: "Dispositivos conectados", icon: ShieldCheck, href: "/comercial/sessoes" },
   { name: "Sair", icon: LogOut, href: "/saindo" },
 ];
 
